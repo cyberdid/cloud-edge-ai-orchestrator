@@ -110,3 +110,14 @@ def test_quota_error_pauses_without_logging(tmp_path):
     router.cloud_share = 0.0
     assert router.complete([{"role": "user", "content": "hi"}]) == ""  # paused: no further calls
     assert gemma.calls == []
+
+
+def test_agy_argon_prompt_forbids_tools(monkeypatch):
+    from antigravity_hybrid_orchestrator.architect.client import CloudArchitectClient
+    from experiments.openevolve.router import agy_argon
+
+    seen = []
+    monkeypatch.setattr(CloudArchitectClient, "complete", lambda self, prompt: (seen.append(prompt) or ("ok", 1, 1)))
+    agy_argon()([{"role": "system", "content": "S"}, {"role": "user", "content": "U"}])
+    assert seen[0].startswith("Answer directly in text")
+    assert "Do not call any tools" in seen[0] and seen[0].rstrip().endswith("U")

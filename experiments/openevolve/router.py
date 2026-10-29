@@ -22,6 +22,11 @@ Backend = Callable[[list[dict]], tuple]
 ARGON_MODEL = "gemini-4-argon-medium"
 QUOTA_PATTERN = re.compile(r"quota|rate.?limit|resource.?exhausted|exhaust|\b429\b", re.IGNORECASE)
 PAUSE_FILE = "QUOTA_PAUSED"
+# agy is an agent; in headless mode a tool call is denied and the turn ends empty
+# (probe 2026-10-29: 1 of 3 calls). Ask for a direct text answer.
+AGY_NO_TOOLS = ("Answer directly in text. Do not call any tools, run commands or read files: you have no "
+                "workspace, and everything you need is below. Reply only with the requested SEARCH/REPLACE "
+                "blocks and a short explanation.\n\n")
 
 
 def choose_model(seed: int, call_index: int, cloud_share: float) -> Literal["gemma", "argon"]:
@@ -127,6 +132,6 @@ def agy_argon(model: str = ARGON_MODEL, timeout_s: float = 1200) -> Backend:
 
     def backend(messages: list[dict]) -> tuple:
         prompt = "\n\n".join(f"{m.get('role', 'user')}:\n{m.get('content', '')}" for m in messages)
-        return client.complete(prompt)
+        return client.complete(AGY_NO_TOOLS + prompt)
 
     return backend
