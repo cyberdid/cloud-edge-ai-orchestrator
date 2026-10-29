@@ -121,3 +121,21 @@ def test_agy_argon_prompt_forbids_tools(monkeypatch):
     agy_argon()([{"role": "system", "content": "S"}, {"role": "user", "content": "U"}])
     assert seen[0].startswith("Answer directly in text")
     assert "Do not call any tools" in seen[0] and seen[0].rstrip().endswith("U")
+
+
+def test_ollama_gemma_sends_paper_i_context(monkeypatch):
+    import io
+    import urllib.request as ur
+
+    from experiments.openevolve.router import ollama_gemma
+
+    sent = []
+
+    def fake_urlopen(request, timeout=None):
+        sent.append(json.loads(request.data))
+        return io.BytesIO(json.dumps({"message": {"content": "x"}, "done_reason": "stop",
+                                      "prompt_eval_count": 1, "eval_count": 1}).encode())
+
+    monkeypatch.setattr(ur, "urlopen", fake_urlopen)
+    assert ollama_gemma()([{"role": "user", "content": "hi"}])[3] == "ok"
+    assert sent[0]["options"]["num_ctx"] == 16384 and sent[0]["think"] is False

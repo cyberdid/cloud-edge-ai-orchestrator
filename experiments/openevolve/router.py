@@ -110,11 +110,14 @@ def serve(router: Router, port: int) -> ThreadingHTTPServer:
 
 
 def ollama_gemma(base_url: str = "http://localhost:11434", model: str = "gemma4:12b", num_predict: int = 2048,
-                 timeout_s: float = 900, temperature: float = 0.7, top_p: float = 0.95) -> Backend:
+                 timeout_s: float = 900, temperature: float = 0.7, top_p: float = 0.95,
+                 num_ctx: int = 16384) -> Backend:
+    """Ollama's default 4096-token context truncated 8/10 spike replies (prompt ~3.1k);
+    16384 is the context Paper I used for the same model."""
     def backend(messages: list[dict]) -> tuple:
         body = json.dumps({
             "model": model, "messages": messages, "stream": False, "think": False,
-            "options": {"num_predict": num_predict, "temperature": temperature, "top_p": top_p},
+            "options": {"num_predict": num_predict, "num_ctx": num_ctx, "temperature": temperature, "top_p": top_p},
         }).encode()
         request = urllib.request.Request(f"{base_url}/api/chat", data=body, headers={"Content-Type": "application/json"})
         reply = json.load(urllib.request.urlopen(request, timeout=timeout_s))
