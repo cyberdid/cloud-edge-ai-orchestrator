@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import re
 import threading
 import time
 import urllib.request
@@ -19,6 +20,8 @@ from typing import Callable, Literal
 
 Backend = Callable[[list[dict]], tuple]
 ARGON_MODEL = "gemini-4-argon-medium"
+QUOTA_PATTERN = re.compile(r"quota|rate.?limit|resource.?exhausted|exhaust|\b429\b", re.IGNORECASE)
+PAUSE_FILE = "QUOTA_PAUSED"
 
 
 def choose_model(seed: int, call_index: int, cloud_share: float) -> Literal["gemma", "argon"]:
@@ -32,16 +35,16 @@ class Router:
         self.log_path = Path(log_path)
         self.backends = {"gemma": gemma, "argon": argon}
         self.call_index = start_index
+        self.paused = False
         self.lock = threading.Lock()
         self.last_usage = (0, 0)
 
     def complete(self, messages: list[dict]) -> str:
         with self.lock:
-            if self.budget is not None and self.call_index >= self.budget:
+            if self.paused or (self.budget is not None and self.call_index >= self.budget):
                 self.last_usage = (0, 0)
-                return ""  # budget spent: not a model call, not logged
+                return ""  # budget spent or quota paused: not a model call, not logged
             index = self.call_index
-            self.call_index += 1
             model = choose_model(self.seed, index, self.cloud_share)
             started, error = time.time(), ""
             try:
@@ -49,8 +52,16 @@ class Router:
                 text, prompt_tokens, completion_tokens = reply[:3]
                 status = reply[3] if len(reply) > 3 else ("ok" if text.strip() else "empty")
             except Exception as exc:  # a failed call is a failed mutation, not a crash
+                if model == "argon" and QUOTA_PATTERN.search(str(exc)):
+                    # quota is the environment, not the model: pause, keep the slot for resume
+                    self.paused = True
+                    self.last_usage = (0, 0)
+                    (self.log_path.parent / PAUSE_FILE).write_text(json.dumps(
+                        {"call_index": index, "ts": started, "error": str(exc)[:500]}))
+                    return ""
                 text, prompt_tokens, completion_tokens = "", 0, 0
                 status, error = f"error:{type(exc).__name__}", str(exc)[:500]
+            self.call_index += 1
             self.last_usage = (prompt_tokens, completion_tokens)
             record = {
                 "call_index": index, "model": model, "ts_start": started,

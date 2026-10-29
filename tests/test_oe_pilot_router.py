@@ -17,7 +17,7 @@ def fake(text="stub", tokens=(3, 5)):
 
 
 def boom(messages):
-    raise RuntimeError("quota exhausted")
+    raise RuntimeError("connection reset by peer")
 
 
 def read_log(path):
@@ -44,7 +44,7 @@ def test_backend_error_returns_empty_and_logs(tmp_path):
     log = read_log(tmp_path / "calls.jsonl")
     assert [r["call_index"] for r in log] == [0, 1]
     assert log[0]["status"] == "error:RuntimeError"
-    assert "quota exhausted" in log[0]["error"]
+    assert "connection reset" in log[0]["error"]
 
 
 def test_log_record_fields(tmp_path):
@@ -93,3 +93,20 @@ def test_budget_caps_logged_calls(tmp_path):
     assert replies == ["stub", "stub", "", ""]
     assert len(gemma.calls) == 2
     assert [r["call_index"] for r in read_log(tmp_path / "calls.jsonl")] == [3, 4]
+
+
+def quota(messages):
+    raise RuntimeError("Cloud Architect (agy) returned non-zero exit code (1): RESOURCE_EXHAUSTED: weekly quota")
+
+
+def test_quota_error_pauses_without_logging(tmp_path):
+    gemma = fake()
+    router = Router(101, 1.0, tmp_path / "calls.jsonl", gemma=gemma, argon=quota, start_index=4)
+    assert router.complete([{"role": "user", "content": "hi"}]) == ""
+    assert router.paused is True
+    assert router.call_index == 4  # the slot is not spent; resume retries it
+    assert not (tmp_path / "calls.jsonl").exists()
+    assert "RESOURCE_EXHAUSTED" in json.loads((tmp_path / "QUOTA_PAUSED").read_text())["error"]
+    router.cloud_share = 0.0
+    assert router.complete([{"role": "user", "content": "hi"}]) == ""  # paused: no further calls
+    assert gemma.calls == []

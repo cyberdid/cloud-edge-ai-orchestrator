@@ -24,7 +24,7 @@ from openevolve.config import load_config
 
 from experiments.openevolve.best_of_n import run_best_of_n
 from experiments.openevolve.candidate_log import ENV_VAR
-from experiments.openevolve.router import ARGON_MODEL, Router, agy_argon, ollama_gemma, serve
+from experiments.openevolve.router import ARGON_MODEL, PAUSE_FILE, Router, agy_argon, ollama_gemma, serve
 from experiments.openevolve.tasks import TASKS
 
 CLOUD_SHARE = {"L": 0.0, "LC": 0.1, "B": 0.0}
@@ -90,6 +90,10 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
                     start_index=len(_lines(calls_path)), budget=max_iter)
     os.environ[ENV_VAR] = str(out / "candidates.jsonl")
     manifest = json.loads(manifest_path.read_text()) if resume and manifest_path.exists() else {}
+    pause_path = out / PAUSE_FILE
+    if pause_path.exists():  # resuming after a quota pause: keep the event, clear the flag
+        manifest["quota_pauses"] = manifest.get("quota_pauses", []) + [json.loads(pause_path.read_text())]
+        pause_path.unlink()
     manifest.update({
         "task": task, "arm": arm, "seed": seed, "cloud_share": CLOUD_SHARE[arm], "max_iterations": max_iter,
         "git_sha": _git_sha(), "openevolve_version": importlib.metadata.version("openevolve"),
@@ -119,7 +123,7 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
             server.join(10)
     calls = _lines(calls_path)
     manifest.update({
-        "status": "complete" if len(calls) >= max_iter else "incomplete",
+        "status": "paused_quota" if pause_path.exists() else ("complete" if len(calls) >= max_iter else "incomplete"),
         "wall_s": manifest.get("wall_s", 0.0) + time.time() - started,
         "llm_latency_s": {m: sum(c["latency_s"] for c in calls if c["model"] == m) for m in ("gemma", "argon")},
         "calls_by_status": {s: sum(c["status"] == s for c in calls) for s in {c["status"] for c in calls}},
@@ -139,6 +143,7 @@ def main() -> None:
     args = parser.parse_args()
     manifest = run(args.task, args.arm, args.seed, args.out, args.resume, args.llm)
     print(json.dumps({k: manifest[k] for k in ("task", "arm", "seed", "status")}))
+    raise SystemExit(3 if manifest["status"] == "paused_quota" else 0)
 
 
 if __name__ == "__main__":

@@ -61,6 +61,8 @@ def run_best_of_n(task: str, router: Router, n: int, out_dir: Path, seed: int, r
         )
         reply = router.complete([{"role": "system", "content": prompt["system"]},
                                  {"role": "user", "content": prompt["user"]}])
+        if router.paused:
+            break
         child = child_program(seed_code, reply, config.diff_pattern)
         if child is None:
             state["failed_attempts"] += 1
