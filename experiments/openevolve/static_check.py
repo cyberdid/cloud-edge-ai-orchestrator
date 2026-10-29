@@ -6,7 +6,7 @@ import ast
 
 FORBIDDEN_MODULES = frozenset({
     "os", "sys", "subprocess", "socket", "inspect", "importlib",
-    "builtins", "ctypes", "pathlib", "shutil",
+    "builtins", "ctypes", "pathlib", "shutil", "gc",
 })
 FORBIDDEN_CALLS = frozenset({
     "open", "eval", "exec", "compile", "__import__",
