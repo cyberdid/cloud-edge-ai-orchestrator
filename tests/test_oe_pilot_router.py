@@ -84,3 +84,12 @@ def test_resume_start_index(tmp_path):
     record = read_log(tmp_path / "calls.jsonl")[0]
     assert record["call_index"] == 37
     assert record["model"] == choose_model(101, 37, 0.5)
+
+
+def test_budget_caps_logged_calls(tmp_path):
+    gemma = fake()
+    router = Router(101, 0.0, tmp_path / "calls.jsonl", gemma=gemma, argon=boom, start_index=3, budget=5)
+    replies = [router.complete([{"role": "user", "content": "hi"}]) for _ in range(4)]
+    assert replies == ["stub", "stub", "", ""]
+    assert len(gemma.calls) == 2
+    assert [r["call_index"] for r in read_log(tmp_path / "calls.jsonl")] == [3, 4]

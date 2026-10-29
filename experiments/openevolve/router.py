@@ -27,8 +27,8 @@ def choose_model(seed: int, call_index: int, cloud_share: float) -> Literal["gem
 
 class Router:
     def __init__(self, seed: int, cloud_share: float, log_path: Path, *,
-                 gemma: Backend, argon: Backend, start_index: int = 0) -> None:
-        self.seed, self.cloud_share = seed, cloud_share
+                 gemma: Backend, argon: Backend, start_index: int = 0, budget: int | None = None) -> None:
+        self.seed, self.cloud_share, self.budget = seed, cloud_share, budget
         self.log_path = Path(log_path)
         self.backends = {"gemma": gemma, "argon": argon}
         self.call_index = start_index
@@ -37,6 +37,9 @@ class Router:
 
     def complete(self, messages: list[dict]) -> str:
         with self.lock:
+            if self.budget is not None and self.call_index >= self.budget:
+                self.last_usage = (0, 0)
+                return ""  # budget spent: not a model call, not logged
             index = self.call_index
             self.call_index += 1
             model = choose_model(self.seed, index, self.cloud_share)
