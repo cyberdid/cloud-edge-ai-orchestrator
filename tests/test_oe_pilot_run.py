@@ -74,3 +74,24 @@ def test_no_diff_reply_counts_as_failed_attempt(tmp_path):
 
 def test_cloud_share_by_arm():
     assert run_pilot.CLOUD_SHARE == {"L": 0.0, "LC": 0.1, "B": 0.0}
+
+
+@real_docker
+def test_quota_pause_then_resume_completes_budget(tmp_path, monkeypatch):
+    from experiments.openevolve.router import choose_model
+
+    monkeypatch.setenv("OE_PILOT_MAX_ITER", "10")
+    seed, first_argon = next((s, i) for s in range(1000) for i in range(1, 10)
+                             if choose_model(s, i, 0.1) == "argon" and all(choose_model(s, j, 0.1) == "gemma" for j in range(i)))
+    gemma = lambda messages: (run_pilot.stub_reply("circle_packing"), 1, 1)  # noqa: E731
+
+    def exhausted(messages):
+        raise RuntimeError("RESOURCE_EXHAUSTED: weekly quota")
+
+    paused = run_pilot.run("circle_packing", "LC", seed, tmp_path / "run", resume=False, backends=(gemma, exhausted))
+    assert paused["status"] == "paused_quota"
+    assert len(lines(tmp_path / "run/calls.jsonl")) == first_argon
+    done = run_pilot.run("circle_packing", "LC", seed, tmp_path / "run", resume=True, backends=(gemma, gemma))
+    assert done["status"] == "complete"
+    assert [c["call_index"] for c in lines(tmp_path / "run/calls.jsonl")] == list(range(10))
+    assert len(done["quota_pauses"]) == 1

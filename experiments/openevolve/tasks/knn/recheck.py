@@ -27,6 +27,7 @@ HOLDOUT_SETS = [
     dict(seed=9003, n=250_000, d=12, k=10, centres=150, sigma=0.04),
 ]
 SANDBOX_TIMEOUT_S = 300
+COPY_TOL = 1e-8  # absolute tolerance used by RIE's check_neighbors
 
 
 @lru_cache(maxsize=None)
@@ -47,7 +48,7 @@ def _fresh_failures(specs: list[dict], outputs: list) -> list[str]:
         failures += [f"fresh {n}: {f}" for f in found]
         if not found:
             for row, index in enumerate(copied.tolist()):
-                if ids[row][0] != index or dists[row][0] != 0:
+                if ids[row][0] != index or abs(dists[row][0]) > COPY_TOL:
                     failures.append(f"fresh {n} query {row}: indexed copy not returned first at distance 0")
     return failures
 

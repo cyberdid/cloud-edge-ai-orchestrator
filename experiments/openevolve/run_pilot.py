@@ -73,7 +73,8 @@ def _git_sha() -> str:
     return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 
 
-def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "real") -> dict:
+def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "real",
+        backends: tuple | None = None) -> dict:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     calls_path, manifest_path = out / "calls.jsonl", out / "manifest.json"
@@ -82,7 +83,9 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
     max_iter = int(os.environ.get("OE_PILOT_MAX_ITER", "100"))
     num_predict = int(os.environ.get("OE_PILOT_NUM_PREDICT", "2048"))
     spec = TASKS[task]
-    if llm == "stub":
+    if backends:
+        gemma, argon = backends
+    elif llm == "stub":
         gemma = argon = lambda messages: (stub_reply(task), 1, 1)  # noqa: E731
     else:
         gemma, argon = ollama_gemma(model=GEMMA_MODEL, num_predict=num_predict), agy_argon()
@@ -113,11 +116,14 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
             config.llm.update_model_params({"api_base": config.llm.api_base, "api_key": "unused"}, overwrite=True)
             config.random_seed = config.database.random_seed = seed
             config.max_iterations = max_iter
-            checkpoint, done = _latest_checkpoint(out / "openevolve") if resume else (None, 0)
-            if max_iter - done > 0:
+            checkpoint = _latest_checkpoint(out / "openevolve")[0] if resume else None
+            # Remaining work is counted in logged calls, not checkpoint iterations: iterations
+            # after a quota pause or a kill made no (or already-logged) calls.
+            remaining = max_iter - router.call_index
+            if remaining > 0:
                 controller = OpenEvolve(str(spec["initial"]), str(spec["evaluator"]), config,
                                         output_dir=str(out / "openevolve"))
-                asyncio.run(controller.run(iterations=max_iter - done, checkpoint_path=checkpoint))
+                asyncio.run(controller.run(iterations=remaining, checkpoint_path=checkpoint))
         finally:
             server.terminate()
             server.join(10)

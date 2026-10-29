@@ -149,3 +149,19 @@ def test_generators_are_deterministic():
     a = data.make_set(**data.DEV_SETS[0], q=20)
     b = data.make_set(**data.DEV_SETS[0], q=20)
     assert np.array_equal(a[0], b[0]) and np.array_equal(a[1], b[1])
+
+
+MATMUL_DISTANCES = '''
+def approximate_knn(vectors, queries, k):
+    x = np.asarray(vectors, dtype=float)
+    q = np.asarray(queries, dtype=float)
+    ids, _ = exact_knn(x, q, k)
+    d = (q * q).sum(axis=1)[:, None] + (x[ids] ** 2).sum(axis=2) - 2.0 * np.einsum("qd,qkd->qk", q, x[ids])
+    return ids, np.maximum(d, 0.0) + 1e-15
+'''
+
+
+@real_docker
+def test_exact_copy_rule_uses_rie_tolerance(project_root):
+    result = recheck_knn(with_block(project_root, MATMUL_DISTANCES))
+    assert not any("indexed copy" in r for r in result["reasons"]), result["reasons"]
