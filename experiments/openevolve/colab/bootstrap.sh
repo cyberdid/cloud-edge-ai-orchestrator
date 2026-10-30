@@ -9,7 +9,7 @@ export UV_PYTHON_INSTALL_DIR=/opt/uv-python   # readable by the candidate user, 
 export CLOUDSDK_CONFIG=/root/.oe/gcloud
 
 chmod 700 /root
-mkdir -p /root/oe /root/oe-runs /root/.oe
+mkdir -p /root/oe /root/oe-runs /root/.oe /opt/uv-python
 chmod 700 /root/.oe
 tar -xzf "$TARBALL" -C /root/oe
 cd /root/oe

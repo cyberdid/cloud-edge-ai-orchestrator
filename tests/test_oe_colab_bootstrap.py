@@ -15,7 +15,7 @@ def test_bootstrap_syntax():
 
 def test_bootstrap_pins_versions():
     for needle in ("--locked", "requirements.lock", "OLLAMA_VERSION=0.40.13", "OLLAMA_NUM_PARALLEL=2",
-                   "OLLAMA_KEEP_ALIVE=-1", "chmod 700 /root", "/opt/oe-cand", "UV_PYTHON_INSTALL_DIR=/opt/uv-python",
+                   "OLLAMA_KEEP_ALIVE=-1", "chmod 700 /root", "/opt/oe-cand", "/root/.oe /opt/uv-python", "UV_PYTHON_INSTALL_DIR=/opt/uv-python",
                    "BOOTSTRAP OK"):
         assert needle in text(), needle
 
