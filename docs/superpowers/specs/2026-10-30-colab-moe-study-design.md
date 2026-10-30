@@ -44,7 +44,7 @@ pilot's, unchanged:
 | Cloud model | `gemini-4-argon-medium` via `agy` on the VM, same "answer directly, no tools" prefix |
 | Hardware | Colab L4 24 GB, one session at a time |
 | Tasks | `circle_packing`, `knn` |
-| Standard runs | each model: 2 tasks × arms L and B × 10 seeds (101…1010) × 100 calls |
+| Standard runs | each model: 2 tasks × arms L and B × 100 calls; 10 seeds (101…1010), 31B 5 seeds (spike: ~10 tokens/s) |
 | Cloud arm | MoE only: arm LC, 2 tasks × 5 seeds × 100 calls (~100 Argon calls) |
 | Long runs | MoE, arm L, 3 seeds: circle packing 1,000 iterations, kNN 500 |
 | Order | MoE standard L/B → 12B → E4B → 31B → MoE long runs → MoE LC last (owner's choice: one `agy` login on the final VM, fresh weekly Argon quota, no overlap with the laptop pilot's LC runs) |
