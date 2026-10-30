@@ -111,15 +111,37 @@ def start_vm(state: dict | None) -> None:
     log({"event": "bootstrap", "detail": out.strip().splitlines()[-1]})
     cell = CACHE / "study_cell.py"
     cell.write_text(CELL)
-    # The cell keeps the kernel busy for the whole study; the client may go away.
-    subprocess.Popen(["setsid", "nohup", "colab", "exec", "-s", SESSION, "-f", str(cell)],
-                     stdout=open(CACHE / "cell.log", "a"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+    for attempt in range(2):
+        # The cell keeps the kernel busy for the whole study; the client may go away.
+        subprocess.Popen(["setsid", "nohup", "colab", "exec", "-s", SESSION, "-f", str(cell)],
+                         stdout=open(CACHE / "cell.log", "a"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+        if wait_running():
+            return
+        colab("restart-kernel", "-s", SESSION, timeout=120)
+    raise RuntimeError("study driver did not start")
+
+
+def wait_running(timeout_s: float = 600, poll_s: float = 20) -> bool:
+    """The driver writes phase "running" right after restoring from the bucket."""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        state = read_state()
+        if state and state.get("phase") == "running":
+            return True
+        time.sleep(poll_s)
+    return False
 
 
 def exec_code(code: str, timeout: float = 600) -> str:
+    """`colab exec` sometimes hangs before reaching the kernel (seen twice in the spike):
+    on a timeout, restart the kernel and try once more."""
     path = CACHE / "snippet.py"
     path.write_text(code)
-    out = colab("exec", "-s", SESSION, "-f", str(path), timeout=timeout)
+    try:
+        out = colab("exec", "-s", SESSION, "-f", str(path), timeout=timeout)
+    except subprocess.TimeoutExpired:
+        colab("restart-kernel", "-s", SESSION, timeout=120)
+        out = colab("exec", "-s", SESSION, "-f", str(path), timeout=timeout)
     return out.stdout + out.stderr
 
 

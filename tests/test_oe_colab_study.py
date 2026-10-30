@@ -35,9 +35,9 @@ def complete(root, spec):
 
 def test_plan_order_and_counts():
     plan = study_plan()
-    assert len(plan) == 176
+    assert len(plan) == 156
     assert {r.model for r in plan[:40]} == {"gemma4:26b"} and {r.arm for r in plan[:40]} == {"L", "B"}
-    assert [r.model for r in plan[40:160:40]] == ["gemma4:12b", "gemma4:e4b", "gemma4:31b"]
+    assert [r.model for r in (plan[40], plan[80], plan[120])] == ["gemma4:12b", "gemma4:e4b", "gemma4:31b"]
     long = [r for r in plan if r.long]
     assert len(long) == 6 and {(r.task, r.max_iter) for r in long} == {("circle_packing", 1000), ("knn", 500)}
     assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[-10:])
@@ -102,3 +102,18 @@ def test_finished_runs_are_pushed(tmp_path):
                prepare_model=lambda model: None, agy_check=lambda: True, sleep=lambda s: None)
     assert [p.name for p in sync.pushed] == [r.dirname for r in plan]
     assert sync.states[-1]["phase"] == "done"
+
+
+def test_31b_runs_five_seeds_and_plan_total():
+    plan = study_plan()
+    big = [r for r in plan if r.model == "gemma4:31b"]
+    assert len(big) == 20 and {r.seed for r in big} == {101, 202, 303, 404, 505}
+    assert len(plan) == 156
+
+
+def test_ensure_ollama_starts_server_when_down():
+    started = []
+    study.ensure_ollama(is_up=lambda: False, start=lambda: started.append(1), wait=lambda: True)
+    assert started == [1]
+    study.ensure_ollama(is_up=lambda: True, start=lambda: started.append(2), wait=lambda: True)
+    assert started == [1]

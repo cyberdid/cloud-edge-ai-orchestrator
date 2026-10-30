@@ -50,3 +50,22 @@ def test_parse_sessions_ignores_cli_messages():
     assert parse_sessions("[colab] No active sessions found on server.\n") == []
     listing = "[oe-scale] gpu-l4-s-x | Hardware: L4 | Status: BUSY\n[other] cpu-y | Hardware: CPU\n"
     assert parse_sessions(listing) == ["oe-scale", "other"]
+
+
+def test_exec_code_restarts_kernel_once_after_a_hang(monkeypatch, tmp_path):
+    import subprocess
+
+    from experiments.openevolve.colab import watchdog
+
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    calls = []
+
+    def fake_colab(*args, timeout=1800):
+        calls.append(args[0])
+        if args[0] == "exec" and calls.count("exec") == 1:
+            raise subprocess.TimeoutExpired("colab", timeout)
+        return subprocess.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(watchdog, "colab", fake_colab)
+    assert watchdog.exec_code("print(1)", timeout=5) == "ok"
+    assert calls == ["exec", "restart-kernel", "exec"]

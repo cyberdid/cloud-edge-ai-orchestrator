@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.request
 from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
@@ -26,6 +27,9 @@ MOE = "gemma4:26b"
 TASKS = ("circle_packing", "knn")
 SEEDS = tuple(101 * i for i in range(1, 11))
 LC_SEEDS = SEEDS[:5]
+# 31B dense runs ~10 tokens/s on the L4 (spike 2026-10-30), ~6x slower than the MoE:
+# 5 seeds keep the study under the compute-unit cap.
+SEEDS_BY_MODEL = {"gemma4:31b": SEEDS[:5]}
 LONG_SEEDS = SEEDS[:3]
 LONG_ITERATIONS = {"circle_packing": 1000, "knn": 500}
 CANDIDATE_PYTHON = "/opt/oe-cand/bin/python"
@@ -55,7 +59,8 @@ class RunSpec:
 
 def study_plan() -> list[RunSpec]:
     plan = [RunSpec(model, task, arm, seed)
-            for model in MODELS for arm in ("L", "B") for task in TASKS for seed in SEEDS]
+            for model in MODELS for arm in ("L", "B") for task in TASKS
+            for seed in SEEDS_BY_MODEL.get(model, SEEDS)]
     plan += [RunSpec(MOE, task, "L", seed, LONG_ITERATIONS[task], long=True) for task in TASKS for seed in LONG_SEEDS]
     plan += [RunSpec(MOE, task, "LC", seed) for task in TASKS for seed in LC_SEEDS]
     return plan
@@ -91,8 +96,40 @@ def launch(spec: RunSpec, root: Path) -> subprocess.Popen:
     return subprocess.Popen(args, env=env, stdout=log, stderr=subprocess.STDOUT)
 
 
+def _ollama_up() -> bool:
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:11434/api/version", timeout=5):
+            return True
+    except OSError:
+        return False
+
+
+def _start_ollama() -> None:
+    env = dict(os.environ, OLLAMA_HOST="127.0.0.1:11434", OLLAMA_NUM_PARALLEL="2", OLLAMA_KEEP_ALIVE="-1")
+    subprocess.Popen(["ollama", "serve"], env=env, stdout=open("/root/.oe/ollama.log", "a"),
+                     stderr=subprocess.STDOUT, start_new_session=True)
+
+
+def _wait_ollama() -> bool:
+    for _ in range(60):
+        if _ollama_up():
+            return True
+        time.sleep(1)
+    return False
+
+
+def ensure_ollama(is_up: Callable[[], bool] = _ollama_up, start: Callable[[], None] = _start_ollama,
+                  wait: Callable[[], bool] = _wait_ollama) -> None:
+    """The server dies with the kernel (it is a child of the cell); start it again if needed."""
+    if not is_up():
+        start()
+        if not wait():
+            raise RuntimeError("ollama serve did not come up")
+
+
 def prepare_model(model: str) -> None:
     """Unload other models (24 GB holds one) and make sure ``model`` is pulled."""
+    ensure_ollama()
     loaded = subprocess.run(["ollama", "ps"], capture_output=True, text=True).stdout.splitlines()[1:]
     for line in loaded:
         name = line.split()[0]
