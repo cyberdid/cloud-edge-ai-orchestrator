@@ -42,3 +42,11 @@ def test_stale_session_is_stopped():
 
 def test_other_sessions_are_ignored():
     assert decide(state(), ["someone-else"], balance=300, now=NOW) == "start"
+
+
+def test_parse_sessions_ignores_cli_messages():
+    from experiments.openevolve.colab.watchdog import parse_sessions
+
+    assert parse_sessions("[colab] No active sessions found on server.\n") == []
+    listing = "[oe-scale] gpu-l4-s-x | Hardware: L4 | Status: BUSY\n[other] cpu-y | Hardware: CPU\n"
+    assert parse_sessions(listing) == ["oe-scale", "other"]

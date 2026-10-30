@@ -65,9 +65,13 @@ def write_state(state: dict) -> None:
     _run(["gcloud", "storage", "cp", str(tmp), f"{BUCKET}/state.json"], timeout=120)
 
 
+def parse_sessions(text: str) -> list[str]:
+    """Session names from ``colab sessions``; ``[colab] ...`` lines are CLI messages."""
+    return [name for name in re.findall(r"^\[([^\]]+)\]", text, flags=re.M) if name != "colab"]
+
+
 def sessions() -> list[str]:
-    out = _run(["colab", "sessions"], timeout=120).stdout
-    return re.findall(r"^\[([^\]]+)\]", out, flags=re.M)
+    return parse_sessions(_run(["colab", "sessions"], timeout=120).stdout)
 
 
 def balance() -> float:
