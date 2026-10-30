@@ -28,7 +28,11 @@ from experiments.openevolve.router import ARGON_MODEL, PAUSE_FILE, Router, agy_a
 from experiments.openevolve.tasks import TASKS
 
 CLOUD_SHARE = {"L": 0.0, "LC": 0.1, "B": 0.0}
-GEMMA_MODEL = "gemma4:12b"
+GEMMA_MODEL = "gemma4:12b"  # the pilot's model; OE_PILOT_GEMMA_MODEL selects another Gemma
+
+
+def gemma_model() -> str:
+    return os.environ.get("OE_PILOT_GEMMA_MODEL", GEMMA_MODEL)
 STUB_DIFFS = {
     "circle_packing": ("    n = 26\n", "    n = 26  # stub\n"),
     "knn": ('    """Baseline: exact search (recall 1.0, no speed-up)."""\n',
@@ -88,7 +92,9 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
     elif llm == "stub":
         gemma = argon = lambda messages: (stub_reply(task), 1, 1)  # noqa: E731
     else:
-        gemma, argon = ollama_gemma(model=GEMMA_MODEL, num_predict=num_predict), agy_argon()
+        gemma = ollama_gemma(base_url=os.environ.get("OE_PILOT_OLLAMA_URL", "http://localhost:11434"),
+                             model=gemma_model(), num_predict=num_predict)
+        argon = agy_argon()
     router = Router(seed, CLOUD_SHARE[arm], calls_path, gemma=gemma, argon=argon,
                     start_index=len(_lines(calls_path)), budget=max_iter)
     os.environ[ENV_VAR] = str(out / "candidates.jsonl")
@@ -101,7 +107,7 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
         "task": task, "arm": arm, "seed": seed, "cloud_share": CLOUD_SHARE[arm], "max_iterations": max_iter,
         "git_sha": _git_sha(), "openevolve_version": importlib.metadata.version("openevolve"),
         "config_sha256": hashlib.sha256(spec["config"].read_bytes()).hexdigest(),
-        "models": {"gemma": GEMMA_MODEL, "argon": ARGON_MODEL}, "num_predict": num_predict, "llm": llm,
+        "models": {"gemma": gemma_model(), "argon": ARGON_MODEL}, "num_predict": num_predict, "llm": llm,
         "status": "running", "starts": manifest.get("starts", []) + [time.time()],
     })
     manifest_path.write_text(json.dumps(manifest, indent=2))
