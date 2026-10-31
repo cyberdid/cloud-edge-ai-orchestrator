@@ -5,6 +5,6 @@ After=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=%h/Projects/llm/antigravity-colab-scale
-Environment=PATH=%h/.local/bin:%h/google-cloud-sdk/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=%h/.local/bin:%h/google-cloud-sdk/bin:/snap/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=%h/Projects/llm/antigravity-colab-scale/.venv/bin/python -m experiments.openevolve.colab.watchdog
 TimeoutStartSec=5400
