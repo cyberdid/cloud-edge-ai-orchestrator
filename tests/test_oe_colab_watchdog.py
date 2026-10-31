@@ -32,7 +32,13 @@ def test_starting_state_is_not_restarted():
 
 def test_no_session_with_work_starts():
     assert decide(None, [], balance=399.47, now=NOW) == "start"
-    assert decide(state(), [], balance=300, now=NOW) == "start"
+    assert decide(state(updated=NOW - 3600), [], balance=300, now=NOW) == "start"
+
+
+def test_fresh_heartbeat_never_starts_a_second_vm():
+    # a VM created on another host shows as "?" here; its driver's heartbeat is fresh
+    assert decide(state(updated=NOW - 300), ["?"], balance=300, now=NOW) == "none"
+    assert decide(state(updated=NOW - 300), [], balance=300, now=NOW) == "none"
 
 
 def test_stale_session_is_stopped():
@@ -41,7 +47,7 @@ def test_stale_session_is_stopped():
 
 
 def test_other_sessions_are_ignored():
-    assert decide(state(), ["someone-else"], balance=300, now=NOW) == "start"
+    assert decide(state(updated=NOW - 3600), ["someone-else"], balance=300, now=NOW) == "start"
 
 
 def test_parse_sessions_ignores_cli_messages():

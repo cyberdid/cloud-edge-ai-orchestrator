@@ -42,12 +42,11 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
         return "stop_capped" if live else "none"
     if state and (state.get("phase") == "done" or state.get("blocked")):
         return "stop" if live else "none"
-    fresh = bool(state) and now - state.get("updated", 0) < STALE_S
-    if state and state.get("phase") == "starting" and fresh:
+    # A fresh heartbeat means a driver (or a start in progress) is alive somewhere, even
+    # if its session was created on another host and shows here without our name.
+    if state and now - state.get("updated", 0) < STALE_S:
         return "none"
-    if not live:
-        return "start"
-    return "none" if fresh else "stop"
+    return "stop" if live else "start"
 
 
 def _run(args: list[str], timeout: float = 600, **kw) -> subprocess.CompletedProcess:
