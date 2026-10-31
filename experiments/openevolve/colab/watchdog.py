@@ -1,4 +1,4 @@
-"""Laptop watchdog for the Colab scale study (systemd user timer, every 10 minutes).
+"""Watchdog for the Colab scale study (systemd user timer, every minute).
 
 Reads the study state from the bucket and the live Colab sessions, enforces the
 compute-unit cap, stops finished/blocked/stale VMs and starts a fresh one when work
@@ -9,7 +9,9 @@ from __future__ import annotations
 import argparse
 import fcntl
 import json
+import os
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -31,6 +33,8 @@ import subprocess
 print(subprocess.run("cd /root/oe && OE_COLAB_RUNS=/root/oe-runs .venv/bin/python -m experiments.openevolve.colab.study",
                      shell=True, capture_output=True, text=True).stdout[-2000:])
 """
+CLIENT_UNIT = "oe-colab-client.service"
+CELL_TIMEOUT_S = 48 * 60 * 60
 
 Action = Literal["none", "start", "stop", "stop_capped"]
 
@@ -42,9 +46,11 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
         return "stop_capped" if live else "none"
     if state and (state.get("phase") == "done" or state.get("blocked")):
         return "stop" if live else "none"
-    # A fresh heartbeat means a driver (or a start in progress) is alive somewhere, even
-    # if its session was created on another host and shows here without our name.
-    if state and now - state.get("updated", 0) < STALE_S:
+    # Session names are host-local: another host's live VM appears as "?". Protect
+    # it and an in-progress bootstrap, but do not let an old "running" heartbeat
+    # delay recovery after the server confirms that the VM is gone.
+    if (state and now - state.get("updated", 0) < STALE_S
+            and (state.get("phase") == "starting" or live or "?" in sessions)):
         return "none"
     return "stop" if live else "start"
 
@@ -92,6 +98,18 @@ def colab(*args: str, timeout: float = 1800) -> subprocess.CompletedProcess:
     return _run(["colab", *args], timeout=timeout)
 
 
+def start_attached_client(cell: Path) -> None:
+    """Keep the notebook connection in a unit independent of this oneshot."""
+    _run(["systemctl", "--user", "stop", CLIENT_UNIT], timeout=30)
+    client = _run(["systemd-run", "--user", "--collect", "--unit", CLIENT_UNIT,
+                   "--property", "Type=exec", "--property", "Restart=no",
+                   "--setenv", f"PATH={os.environ.get('PATH', '')}",
+                   shutil.which("colab") or "colab", "exec", "-s", SESSION, "-f", str(cell),
+                   "--timeout", str(CELL_TIMEOUT_S)], timeout=30)
+    if client.returncode:
+        raise RuntimeError(f"cannot start attached Colab client: {client.stderr[-500:]}")
+
+
 def start_vm(state: dict | None) -> None:
     write_state(dict(state or {}, phase="starting", blocked=None, updated=time.time()))
     tarball = CACHE / "oe.tar.gz"
@@ -112,8 +130,10 @@ def start_vm(state: dict | None) -> None:
     cell.write_text(CELL)
     for attempt in range(2):
         # The cell keeps the kernel busy for the whole study; the client may go away.
-        subprocess.Popen(["setsid", "nohup", "colab", "exec", "-s", SESSION, "-f", str(cell)],
-                         stdout=open(CACHE / "cell.log", "a"), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+        # A child of this oneshot service is killed when the watchdog exits, even
+        # with setsid/nohup. Give the attached client its own systemd cgroup and a
+        # timeout suitable for a long-running notebook cell (CLI default: 30 s).
+        start_attached_client(cell)
         if wait_running():
             return
         colab("restart-kernel", "-s", SESSION, timeout=120)
@@ -137,10 +157,12 @@ def exec_code(code: str, timeout: float = 600) -> str:
     path = CACHE / "snippet.py"
     path.write_text(code)
     try:
-        out = colab("exec", "-s", SESSION, "-f", str(path), timeout=timeout)
+        out = colab("exec", "-s", SESSION, "-f", str(path),
+                    "--timeout", str(max(1, timeout - 30)), timeout=timeout)
     except subprocess.TimeoutExpired:
         colab("restart-kernel", "-s", SESSION, timeout=120)
-        out = colab("exec", "-s", SESSION, "-f", str(path), timeout=timeout)
+        out = colab("exec", "-s", SESSION, "-f", str(path),
+                    "--timeout", str(max(1, timeout - 30)), timeout=timeout)
     return out.stdout + out.stderr
 
 

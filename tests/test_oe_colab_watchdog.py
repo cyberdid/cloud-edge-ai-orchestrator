@@ -35,10 +35,10 @@ def test_no_session_with_work_starts():
     assert decide(state(updated=NOW - 3600), [], balance=300, now=NOW) == "start"
 
 
-def test_fresh_heartbeat_never_starts_a_second_vm():
+def test_fresh_heartbeat_protects_live_vm_but_not_a_missing_vm():
     # a VM created on another host shows as "?" here; its driver's heartbeat is fresh
     assert decide(state(updated=NOW - 300), ["?"], balance=300, now=NOW) == "none"
-    assert decide(state(updated=NOW - 300), [], balance=300, now=NOW) == "none"
+    assert decide(state(updated=NOW - 300), [], balance=300, now=NOW) == "start"
 
 
 def test_stale_session_is_stopped():
