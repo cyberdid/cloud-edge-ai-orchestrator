@@ -117,3 +117,22 @@ def test_ensure_ollama_starts_server_when_down():
     assert started == [1]
     study.ensure_ollama(is_up=lambda: True, start=lambda: started.append(2), wait=lambda: True)
     assert started == [1]
+
+
+def test_running_state_is_written_before_restore(tmp_path):
+    events = []
+
+    class OrderedSync(FakeSync):
+        def restore(self):
+            events.append("restore")
+            super().restore()
+
+        def write_state(self, state):
+            events.append(("write_state", state["phase"]))
+            super().write_state(state)
+
+    sync = OrderedSync()
+    study.main(tmp_path, sync, plan=study_plan()[:1], runner=lambda spec, root: FakeProc(),
+               prepare_model=lambda model: None, agy_check=lambda: True, sleep=lambda s: None)
+    assert events[:3] == [("write_state", "running"), "restore", ("write_state", "running")]
+

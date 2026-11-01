@@ -129,30 +129,39 @@ def start_vm(state: dict | None) -> None:
     write_state(dict(state or {}, phase="starting", blocked=None, updated=time.time()))
     tarball = CACHE / "oe.tar.gz"
     _run(["git", "-C", str(REPO), "archive", "--format=tar.gz", "-o", str(tarball), "HEAD", *ARCHIVE_PATHS])
-    if colab("new", "-s", SESSION, "--gpu", "L4", timeout=600).returncode:
-        raise RuntimeError("colab new failed")
-    exec_code("import os; os.makedirs('/root/.oe', mode=0o700, exist_ok=True)")
-    colab("upload", "-s", SESSION, str(tarball), "/root/oe.tar.gz")
-    colab("upload", "-s", SESSION, str(REPO / "experiments/openevolve/colab/bootstrap.sh"), "/root/bootstrap.sh")
-    colab("upload", "-s", SESSION, str(KEY), "/root/.oe/sa-key.json")
-    out = exec_code("import subprocess\nr = subprocess.run('chmod 600 /root/.oe/sa-key.json && bash /root/bootstrap.sh "
-                    f"/root/oe.tar.gz {FIRST_MODEL}', shell=True, capture_output=True, text=True)\n"
-                    "print(r.stdout[-1500:], r.stderr[-1500:])", timeout=3600)
-    if "BOOTSTRAP OK" not in out:
-        raise RuntimeError(f"bootstrap failed: {out[-800:]}")
-    log({"event": "bootstrap", "detail": out.strip().splitlines()[-1]})
-    cell = CACHE / "study_cell.py"
-    cell.write_text(CELL)
-    for attempt in range(2):
-        # The cell keeps the kernel busy for the whole study; the client may go away.
-        # A child of this oneshot service is killed when the watchdog exits, even
-        # with setsid/nohup. Give the attached client its own systemd cgroup and a
-        # timeout suitable for a long-running notebook cell (CLI default: 30 s).
-        start_attached_client(cell)
-        if wait_running():
-            return
-        colab("restart-kernel", "-s", SESSION, timeout=120)
-    raise RuntimeError("study driver did not start")
+    allocated = False
+    try:
+        if colab("new", "-s", SESSION, "--gpu", "L4", timeout=600).returncode:
+            raise RuntimeError("colab new failed")
+        allocated = True
+        exec_code("import os; os.makedirs('/root/.oe', mode=0o700, exist_ok=True)")
+        colab("upload", "-s", SESSION, str(tarball), "/root/oe.tar.gz")
+        colab("upload", "-s", SESSION, str(REPO / "experiments/openevolve/colab/bootstrap.sh"), "/root/bootstrap.sh")
+        colab("upload", "-s", SESSION, str(KEY), "/root/.oe/sa-key.json")
+        out = exec_code("import subprocess\nr = subprocess.run('chmod 600 /root/.oe/sa-key.json && bash /root/bootstrap.sh "
+                        f"/root/oe.tar.gz {FIRST_MODEL}', shell=True, capture_output=True, text=True)\n"
+                        "print(r.stdout[-1500:], r.stderr[-1500:])", timeout=3600)
+        if "BOOTSTRAP OK" not in out:
+            raise RuntimeError(f"bootstrap failed: {out[-800:]}")
+        log({"event": "bootstrap", "detail": out.strip().splitlines()[-1]})
+        cell = CACHE / "study_cell.py"
+        cell.write_text(CELL)
+        for attempt in range(2):
+            # The cell keeps the kernel busy for the whole study; the client may go away.
+            # A child of this oneshot service is killed when the watchdog exits, even
+            # with setsid/nohup. Give the attached client its own systemd cgroup and a
+            # timeout suitable for a long-running notebook cell (CLI default: 30 s).
+            start_attached_client(cell)
+            if wait_running():
+                return
+            colab("restart-kernel", "-s", SESSION, timeout=120)
+        raise RuntimeError("study driver did not start")
+    except Exception:
+        _run(["systemctl", "--user", "stop", CLIENT_UNIT], timeout=30)
+        if allocated:
+            colab("stop", "-s", SESSION, timeout=300)
+        write_state(dict(state or {}, phase="recovering", blocked=None, updated=0))
+        raise
 
 
 def wait_running(timeout_s: float = 600, poll_s: float = 20) -> bool:

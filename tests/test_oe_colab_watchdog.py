@@ -132,3 +132,32 @@ def test_exec_code_restarts_kernel_once_after_a_hang(monkeypatch, tmp_path):
     monkeypatch.setattr(watchdog, "colab", fake_colab)
     assert watchdog.exec_code("print(1)", timeout=5) == "ok"
     assert calls == ["exec", "restart-kernel", "exec"]
+
+
+def test_start_vm_stops_allocated_vm_and_clears_starting_state_on_bootstrap_failure(monkeypatch, tmp_path):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    states = []
+    colab_calls = []
+    monkeypatch.setattr(watchdog, "write_state", lambda s: states.append(dict(s)))
+    monkeypatch.setattr(watchdog, "_run", lambda *a, **k: subprocess.CompletedProcess(a, 0, stdout="", stderr=""))
+
+    def fake_colab(*args, timeout=1800):
+        colab_calls.append(args[0])
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(watchdog, "colab", fake_colab)
+    monkeypatch.setattr(watchdog, "exec_code", lambda code, timeout=600: "failed" if "bootstrap.sh" in code else "ok")
+
+    with pytest.raises(RuntimeError, match="bootstrap failed"):
+        watchdog.start_vm(state())
+
+    assert "new" in colab_calls and colab_calls[-1] == "stop"
+    assert states[0]["phase"] == "starting"
+    assert states[-1]["phase"] == "recovering" and states[-1]["updated"] == 0
+    assert decide(states[-1], [], balance=300, now=NOW) == "start"
+    assert decide(states[-1], [SESSION], balance=300, now=NOW) == "stop"
+

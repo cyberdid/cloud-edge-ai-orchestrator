@@ -181,7 +181,6 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
          sleep: Callable[[float], None] = time.sleep, push_interval: float = 600) -> str:
     plan = plan if plan is not None else study_plan()
     root = Path(root)
-    sync.restore()
     state = {"phase": "running", "blocked": None, "host": socket.gethostname(), "total": len(plan)}
 
     def write(**fields) -> None:
@@ -189,6 +188,8 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
                      done=sum(run_status(r.path(root)) == "complete" for r in plan))
         sync.write_state(dict(state))
 
+    write()
+    sync.restore()
     write()
     current_model, agy_checked = None, False
     for batch in batches(plan, root):
