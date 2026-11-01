@@ -58,6 +58,63 @@ def test_parse_sessions_ignores_cli_messages():
     assert parse_sessions(listing) == ["oe-scale", "other"]
 
 
+def test_unknown_cross_host_vm_blocks_restart_even_with_stale_heartbeat():
+    assert decide(state(updated=NOW - 3600), ["?"], balance=300, now=NOW) == "none"
+
+
+def test_sessions_rejects_cli_failure(monkeypatch):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+    monkeypatch.setattr(watchdog, "_run", lambda *a, **k: subprocess.CompletedProcess(a, 1, stdout="", stderr="failed"))
+    with pytest.raises(RuntimeError):
+        watchdog.sessions()
+
+
+def test_sessions_rejects_unrecognised_empty_output(monkeypatch):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+    monkeypatch.setattr(watchdog, "_run", lambda *a, **k: subprocess.CompletedProcess(a, 0, stdout="unexpected", stderr=""))
+    with pytest.raises(RuntimeError):
+        watchdog.sessions()
+
+
+def test_state_read_failure_is_not_treated_as_missing_state(monkeypatch):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+    monkeypatch.setattr(watchdog, "_run", lambda *a, **k: subprocess.CompletedProcess(a, 1, stdout="", stderr="failed"))
+    with pytest.raises(RuntimeError):
+        watchdog.read_state()
+
+
+def test_active_assignment_without_listed_session_fails_closed(monkeypatch, tmp_path):
+    import sys
+    import pytest
+    from experiments.openevolve.colab import watchdog
+    monkeypatch.setattr(watchdog, "read_state", lambda: state())
+    monkeypatch.setattr(watchdog, "sessions", lambda: [])
+    monkeypatch.setattr(watchdog, "usage", lambda: (300.0, 1), raising=False)
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["watchdog"])
+    with pytest.raises(RuntimeError, match="assignment"):
+        watchdog.main()
+
+
+def test_unknown_assignment_at_cap_reports_manual_intervention(monkeypatch, tmp_path):
+    import sys
+    import pytest
+    from experiments.openevolve.colab import watchdog
+    monkeypatch.setattr(watchdog, "read_state", lambda: state())
+    monkeypatch.setattr(watchdog, "sessions", lambda: ["?"])
+    monkeypatch.setattr(watchdog, "usage", lambda: (60.0, 1))
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["watchdog"])
+    with pytest.raises(RuntimeError, match="manual attention"):
+        watchdog.main()
+
+
 def test_exec_code_restarts_kernel_once_after_a_hang(monkeypatch, tmp_path):
     import subprocess
 

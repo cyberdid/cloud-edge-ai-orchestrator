@@ -46,6 +46,9 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
         return "stop_capped" if live else "none"
     if state and (state.get("phase") == "done" or state.get("blocked")):
         return "stop" if live else "none"
+    # Unknown assignments cannot safely be stopped or replaced by name.
+    if "?" in sessions:
+        return "none"
     # Session names are host-local: another host's live VM appears as "?". Protect
     # it and an in-progress bootstrap, but do not let an old "running" heartbeat
     # delay recovery after the server confirms that the VM is gone.
@@ -61,13 +64,17 @@ def _run(args: list[str], timeout: float = 600, **kw) -> subprocess.CompletedPro
 
 def read_state() -> dict | None:
     out = _run(["gcloud", "storage", "cat", f"{BUCKET}/state.json"], timeout=120)
-    return json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else None
+    if out.returncode != 0 or not out.stdout.strip():
+        raise RuntimeError("cannot read study state; refusing automatic action")
+    return json.loads(out.stdout)
 
 
 def write_state(state: dict) -> None:
     tmp = CACHE / "state.json"
     tmp.write_text(json.dumps(state))
-    _run(["gcloud", "storage", "cp", str(tmp), f"{BUCKET}/state.json"], timeout=120)
+    out = _run(["gcloud", "storage", "cp", str(tmp), f"{BUCKET}/state.json"], timeout=120)
+    if out.returncode != 0:
+        raise RuntimeError("cannot persist study state; refusing automatic action")
 
 
 def parse_sessions(text: str) -> list[str]:
@@ -76,14 +83,22 @@ def parse_sessions(text: str) -> list[str]:
 
 
 def sessions() -> list[str]:
-    return parse_sessions(_run(["colab", "sessions"], timeout=120).stdout)
+    out = _run(["colab", "sessions"], timeout=120)
+    if out.returncode:
+        raise RuntimeError("cannot list Colab sessions; refusing automatic action")
+    names = parse_sessions(out.stdout)
+    if not names and "No active sessions found on server." not in out.stdout:
+        raise RuntimeError("unrecognised Colab session response; refusing automatic action")
+    return names
 
 
-def balance() -> float:
-    match = re.search(r"Current balance:\s*([\d.]+)", _run(["colab", "usage"], timeout=120).stdout)
-    if not match:
-        raise RuntimeError("cannot read Colab balance")
-    return float(match.group(1))
+def usage() -> tuple[float, int]:
+    out = _run(["colab", "usage"], timeout=120)
+    balance = re.search(r"Current balance:\s*([\d.]+)", out.stdout)
+    assignments = re.search(r"Active assignments:\s*(\d+)", out.stdout)
+    if out.returncode or not balance or not assignments:
+        raise RuntimeError("cannot read Colab usage; refusing automatic action")
+    return float(balance.group(1)), int(assignments.group(1))
 
 
 def log(event: dict) -> None:
@@ -176,7 +191,12 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return
-        state, live, units = read_state(), sessions(), balance()
+        state, live = read_state(), sessions()
+        units, assignment_count = usage()
+        if assignment_count != len(live):
+            raise RuntimeError("Colab assignment count disagrees with session listing; refusing automatic action")
+        if "?" in live and (START_BALANCE - units >= CAP_UNITS or state.get("phase") == "done" or state.get("blocked")):
+            raise RuntimeError("unknown Colab session requires manual attention; cannot safely stop it by name")
         action = decide(state, live, units, time.time())
         log({"event": "tick", "action": action, "balance": units, "sessions": live,
              "phase": (state or {}).get("phase"), "blocked": (state or {}).get("blocked")})
