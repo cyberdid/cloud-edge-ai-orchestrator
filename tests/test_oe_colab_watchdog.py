@@ -11,8 +11,10 @@ def state(**kw):
 
 
 def test_cap_stops_session():
-    assert decide(state(), [SESSION], balance=60.0, now=NOW) == "stop_capped"
-    assert decide(state(), [], balance=60.0, now=NOW) == "none"
+    # cap raised to 380 units on 2026-11-02 (docs/colab_scale/DEVIATIONS.md)
+    assert decide(state(), [SESSION], balance=19.0, now=NOW) == "stop_capped"
+    assert decide(state(), [], balance=19.0, now=NOW) == "none"
+    assert decide(state(), [SESSION], balance=60.0, now=NOW) == "none"  # 339.47 spent: below the cap
 
 
 def test_done_stops_session():

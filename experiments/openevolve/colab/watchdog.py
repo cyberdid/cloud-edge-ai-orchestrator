@@ -20,7 +20,7 @@ from typing import Literal
 BUCKET = "gs://oe-colab-scale-0903767759"
 SESSION = "oe-scale"
 START_BALANCE = 399.47
-CAP_UNITS = 330.0
+CAP_UNITS = 380.0  # raised from 330 on 2026-11-02, see docs/colab_scale/DEVIATIONS.md
 STALE_S = 1800
 FIRST_MODEL = "gemma4:26b"
 REPO = Path(__file__).resolve().parents[3]
