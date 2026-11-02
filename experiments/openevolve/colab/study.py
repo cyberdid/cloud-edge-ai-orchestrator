@@ -127,8 +127,19 @@ def ensure_ollama(is_up: Callable[[], bool] = _ollama_up, start: Callable[[], No
             raise RuntimeError("ollama serve did not come up")
 
 
-def prepare_model(model: str) -> None:
-    """Unload other models (24 GB holds one) and make sure ``model`` is pulled."""
+def model_digest(model: str) -> str | None:
+    """Short digest of the local ``model`` build, as ``ollama list`` prints it."""
+    lines = subprocess.run(["ollama", "list"], capture_output=True, text=True).stdout.splitlines()[1:]
+    for line in lines:
+        parts = line.split()
+        if len(parts) > 1 and parts[0] == model:
+            return parts[1]
+    return None
+
+
+def prepare_model(model: str) -> str | None:
+    """Unload other models (24 GB holds one), make sure ``model`` is pulled and return
+    the digest of the pulled build (a fresh VM pulls the registry's current build)."""
     ensure_ollama()
     loaded = subprocess.run(["ollama", "ps"], capture_output=True, text=True).stdout.splitlines()[1:]
     for line in loaded:
@@ -136,6 +147,20 @@ def prepare_model(model: str) -> None:
         if name != model:
             subprocess.run(["ollama", "stop", name], capture_output=True)
     subprocess.run(["ollama", "pull", model], capture_output=True, check=True)
+    return model_digest(model)
+
+
+def record_digest(root: Path, model: str, digest: str, sync) -> None:
+    """Append the build to ``<model>/model_digest.json`` whenever it differs from the last one
+    (registry tags can change between VMs; the history shows which runs used which build)."""
+    path = Path(root) / model.replace(":", "-") / "model_digest.json"
+    history = json.loads(path.read_text()) if path.exists() else []
+    if history and history[-1]["digest"] == digest:
+        return
+    history.append({"digest": digest, "recorded": time.time(), "host": socket.gethostname()})
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(history, indent=1))
+    sync.push_file(path)
 
 
 def agy_ready() -> bool:
@@ -169,6 +194,10 @@ class Sync:
         relative = Path(path).relative_to(self.local).as_posix()
         self._gcloud("rsync", "-r", str(path), f"{self.bucket}/runs/{relative}")
 
+    def push_file(self, path: Path) -> None:
+        relative = Path(path).relative_to(self.local).as_posix()
+        self._gcloud("cp", str(path), f"{self.bucket}/runs/{relative}")
+
     def write_state(self, state: dict) -> None:
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
             json.dump(state, handle)
@@ -177,7 +206,7 @@ class Sync:
 
 
 def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable = launch,
-         prepare_model: Callable[[str], None] = prepare_model, agy_check: Callable[[], bool] = agy_ready,
+         prepare_model: Callable[[str], str | None] = prepare_model, agy_check: Callable[[], bool] = agy_ready,
          sleep: Callable[[float], None] = time.sleep, push_interval: float = 600) -> str:
     plan = plan if plan is not None else study_plan()
     root = Path(root)
@@ -199,8 +228,11 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
                 return "blocked_agy"
             agy_checked = True
         if batch[0].model != current_model:
-            prepare_model(batch[0].model)
+            digest = prepare_model(batch[0].model)
             current_model = batch[0].model
+            if digest:
+                state.setdefault("digests", {})[current_model] = digest
+                record_digest(root, current_model, digest, sync)
             write(model=current_model)
         procs = [(spec, runner(spec, root)) for spec in batch]
         last_push = time.monotonic()

@@ -26,6 +26,9 @@ class FakeSync:
     def write_state(self, state):
         self.states.append(state)
 
+    def push_file(self, path):
+        self.pushed.append(path)
+
 
 def complete(root, spec):
     path = spec.path(root)
@@ -136,3 +139,24 @@ def test_running_state_is_written_before_restore(tmp_path):
                prepare_model=lambda model: None, agy_check=lambda: True, sleep=lambda s: None)
     assert events[:3] == [("write_state", "running"), "restore", ("write_state", "running")]
 
+
+
+def test_model_digest_recorded_per_pull(tmp_path):
+    plan = [r for r in study_plan() if not r.long and r.arm != "LC"][38:42]  # 26b, 26b, 12b, 12b
+    sync = FakeSync()
+    digests = {"gemma4:26b": "001e5dafc3c7", "gemma4:12b": "6114515d63c1"}
+    study.main(tmp_path, sync, plan=plan, runner=lambda spec, root: FakeProc(),
+               prepare_model=digests.get, agy_check=lambda: True, sleep=lambda s: None)
+    assert sync.states[-1]["digests"] == digests
+    record = json.loads((tmp_path / "gemma4-12b" / "model_digest.json").read_text())
+    assert [e["digest"] for e in record] == ["6114515d63c1"]
+    assert tmp_path / "gemma4-12b" / "model_digest.json" in sync.pushed
+
+
+def test_digest_history_appends_only_on_change(tmp_path):
+    plan = study_plan()[:1]
+    for digest in ("aaa", "aaa", "bbb"):  # three VMs; the registry tag changes before the third
+        study.main(tmp_path, FakeSync(), plan=plan, runner=lambda spec, root: FakeProc(),
+                   prepare_model=lambda model: digest, agy_check=lambda: True, sleep=lambda s: None)
+    record = json.loads((tmp_path / "gemma4-26b" / "model_digest.json").read_text())
+    assert [e["digest"] for e in record] == ["aaa", "bbb"]
