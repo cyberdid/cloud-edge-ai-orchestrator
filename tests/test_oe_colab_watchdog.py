@@ -110,7 +110,7 @@ def test_unknown_assignment_at_cap_reports_manual_intervention(monkeypatch, tmp_
     from experiments.openevolve.colab import watchdog
     monkeypatch.setattr(watchdog, "read_state", lambda: state())
     monkeypatch.setattr(watchdog, "sessions", lambda: ["?"])
-    monkeypatch.setattr(watchdog, "usage", lambda: (60.0, 1))
+    monkeypatch.setattr(watchdog, "usage", lambda: (19.0, 1))  # spent 380.47 >= cap 380
     monkeypatch.setattr(watchdog, "CACHE", tmp_path)
     monkeypatch.setattr(sys, "argv", ["watchdog"])
     with pytest.raises(RuntimeError, match="manual attention"):
