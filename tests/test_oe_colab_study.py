@@ -182,3 +182,27 @@ def test_digest_history_appends_only_on_change(tmp_path):
                    prepare_model=lambda model: digest, agy_check=lambda: True, sleep=lambda s: None)
     record = json.loads((tmp_path / "gemma4-26b" / "model_digest.json").read_text())
     assert [e["digest"] for e in record] == ["aaa", "bbb"]
+
+
+def test_login_window_waits_for_agy_then_runs_lc_first(tmp_path):
+    lc = [r for r in study_plan() if r.arm == "LC"][:2]
+    big = [r for r in study_plan() if r.model == "gemma4:31b"][:1]
+    answers = iter([False, False, True])  # the owner logs in during the window
+    launched, sync = [], FakeSync()
+    result = study.main(tmp_path, sync, plan=lc + big,
+                        runner=lambda spec, root: launched.append(spec) or FakeProc(),
+                        prepare_model=lambda model: None, agy_check=lambda: next(answers, True),
+                        sleep=lambda s: None, login_window=lambda: True)
+    assert result == "done" and launched == [lc[0], lc[1], big[0]]
+    assert any(s.get("waiting") == "login_window" for s in sync.states)
+
+
+def test_login_window_expiry_defers_lc(tmp_path):
+    lc = [r for r in study_plan() if r.arm == "LC"][:2]
+    big = [r for r in study_plan() if r.model == "gemma4:31b"][:1]
+    launched, sync = [], FakeSync()
+    result = study.main(tmp_path, sync, plan=lc + big,
+                        runner=lambda spec, root: launched.append(spec) or FakeProc(),
+                        prepare_model=lambda model: None, agy_check=lambda: False,
+                        sleep=lambda s: None, login_window=lambda: True, login_wait_s=120)
+    assert result == "blocked_agy" and launched == [big[0]]

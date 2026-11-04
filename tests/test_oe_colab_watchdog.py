@@ -163,3 +163,15 @@ def test_start_vm_stops_allocated_vm_and_clears_starting_state_on_bootstrap_fail
     assert decide(states[-1], [], balance=300, now=NOW) == "start"
     assert decide(states[-1], [SESSION], balance=300, now=NOW) == "stop"
 
+
+
+def test_lc_reserve_holds_vm_while_lc_waits_for_agy():
+    # Deviation 2026-11-04: the last 20 units are kept for MoE LC (Argon quota refreshes later).
+    # 399.47 - 39.0 = 360.47 spent >= 380 - 20
+    assert decide(state(waiting="agy_login"), [SESSION], balance=39.0, now=NOW) == "hold_lc"
+    assert decide(state(waiting="agy_login"), [], balance=39.0, now=NOW) == "none"
+    assert decide(state(waiting="agy_login"), [SESSION], balance=41.0, now=NOW) == "none"  # 358.47 spent
+    # LC running or the owner's login window: the reserve is being used as intended
+    assert decide(state(waiting=None), [SESSION], balance=39.0, now=NOW) == "none"
+    assert decide(state(waiting="login_window"), [SESSION], balance=39.0, now=NOW) == "none"
+    assert decide(state(phase="blocked", blocked="lc_reserve"), [], balance=39.0, now=NOW) == "none"

@@ -228,6 +228,12 @@ class Sync:
         relative = Path(path).relative_to(self.local).as_posix()
         self._gcloud("cp", str(path), f"{self.bucket}/runs/{relative}")
 
+    def login_window(self) -> bool:
+        """True while the object ``agy_login_window`` exists in the bucket."""
+        out = subprocess.run(["gcloud", "storage", "ls", f"{self.bucket}/agy_login_window"],
+                             env=self.env, capture_output=True)
+        return out.returncode == 0
+
     def write_state(self, state: dict) -> None:
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
             json.dump(state, handle)
@@ -237,7 +243,8 @@ class Sync:
 
 def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable = launch,
          prepare_model: Callable[[str], str | None] = prepare_model, agy_check: Callable[[], bool] = agy_ready,
-         sleep: Callable[[float], None] = time.sleep, push_interval: float = 600) -> str:
+         sleep: Callable[[float], None] = time.sleep, push_interval: float = 600,
+         login_window: Callable[[], bool] = lambda: False, login_wait_s: float = 3600) -> str:
     plan = plan if plan is not None else study_plan()
     root = Path(root)
     state = {"phase": "running", "blocked": None, "host": socket.gethostname(), "total": len(plan)}
@@ -284,7 +291,18 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
     for batch in batches(plan, root):
         if batch[0].arm == "LC" and not agy_ok:
             agy_ok = agy_check()
-            if not agy_ok:
+            if not agy_ok and login_window():
+                # The owner asked for a login slot (flag object in the bucket): keep the
+                # VM and wait for the agy login in its terminal instead of moving on.
+                for _ in range(max(1, int(login_wait_s // 60))):
+                    write(waiting="login_window")
+                    sleep(60)
+                    agy_ok = agy_check()
+                    if agy_ok:
+                        break
+            if agy_ok:
+                write(waiting=None)
+            else:
                 deferred.append(batch)
                 write(waiting="agy_login")
                 continue
@@ -314,4 +332,5 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
 
 if __name__ == "__main__":
     runs = Path(os.environ.get("OE_COLAB_RUNS", "/root/oe-runs"))
-    print(main(runs, Sync(BUCKET, runs)))
+    sync = Sync(BUCKET, runs)
+    print(main(runs, sync, login_window=sync.login_window))

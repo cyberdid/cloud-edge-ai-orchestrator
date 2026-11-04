@@ -21,6 +21,8 @@ BUCKET = "gs://oe-colab-scale-0903767759"
 SESSION = "oe-scale"
 START_BALANCE = 399.47
 CAP_UNITS = 380.0  # raised from 330 on 2026-11-02, see docs/colab_scale/DEVIATIONS.md
+# The last units are kept for MoE LC while it waits for the Argon quota (deviation 2026-11-04).
+LC_RESERVE = 20.0
 STALE_S = 1800
 FIRST_MODEL = "gemma4:26b"
 REPO = Path(__file__).resolve().parents[3]
@@ -36,7 +38,7 @@ print(subprocess.run("cd /root/oe && OE_COLAB_RUNS=/root/oe-runs .venv/bin/pytho
 CLIENT_UNIT = "oe-colab-client.service"
 CELL_TIMEOUT_S = 48 * 60 * 60
 
-Action = Literal["none", "start", "stop", "stop_capped"]
+Action = Literal["none", "start", "stop", "stop_capped", "hold_lc"]
 
 
 def decide(state: dict | None, sessions: list[str], balance: float, now: float,
@@ -46,6 +48,8 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
         return "stop_capped" if live else "none"
     if state and (state.get("phase") == "done" or state.get("blocked")):
         return "stop" if live else "none"
+    if state and state.get("waiting") == "agy_login" and start_balance - balance >= cap - LC_RESERVE:
+        return "hold_lc" if live else "none"
     # Unknown assignments cannot safely be stopped or replaced by name.
     if "?" in sessions:
         return "none"
@@ -211,10 +215,12 @@ def main() -> None:
              "phase": (state or {}).get("phase"), "blocked": (state or {}).get("blocked")})
         if args.dry_run or action == "none":
             return
-        if action in ("stop", "stop_capped"):
+        if action in ("stop", "stop_capped", "hold_lc"):
             colab("stop", "-s", SESSION, timeout=300)
             if action == "stop_capped":
                 write_state(dict(state or {}, phase="capped", updated=time.time()))
+            if action == "hold_lc":
+                write_state(dict(state or {}, phase="blocked", blocked="lc_reserve", updated=time.time()))
             log({"event": action})
         elif action == "start":
             start_vm(state)

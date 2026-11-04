@@ -46,3 +46,26 @@ gcloud iam service-accounts delete oe-colab-sync@gen-lang-client-0903767759.iam.
 gcloud storage rm -r gs://oe-colab-scale-0903767759   # only after the data is downloaded
 rm ~/.config/oe-colab/sa-key.json
 ```
+
+## MoE LC login (after the Argon quota refresh)
+
+LC needs the owner's `agy` login on the VM that runs it; a login is per VM and
+credentials are never copied to the VM. Once spending reaches cap − 20 units while LC
+waits, the watchdog stops the VM (`blocked: "lc_reserve"`). When the quota has refreshed
+and the owner is at the keyboard:
+
+```bash
+# laptop (operator): open a 60-minute login slot and release the hold
+touch /tmp/empty && gcloud storage cp /tmp/empty gs://oe-colab-scale-0903767759/agy_login_window
+gcloud storage cat gs://oe-colab-scale-0903767759/state.json   # then write it back with
+#   "phase": "recovering", "blocked": null, "waiting": null, "updated": 0
+# the watchdog starts a VM within a minute; bootstrap takes ~5-10 min; the driver
+# reaches LC first and shows "waiting": "login_window"
+
+# owner, on the GCE host (gcloud compute ssh oe-watchdog --project gen-lang-client-0903767759 --zone us-central1-a)
+~/.local/bin/colab console -s oe-scale    # or: colab url -s oe-scale, then Terminal in the browser
+agy                                      # complete the login, then exit the console
+
+# after LC has started ("waiting": null, LC run folders appear):
+gcloud storage rm gs://oe-colab-scale-0903767759/agy_login_window
+```
