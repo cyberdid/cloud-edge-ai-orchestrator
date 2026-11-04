@@ -40,13 +40,35 @@ def test_plan_order_and_counts():
     plan = study_plan()
     assert len(plan) == 156
     assert {r.model for r in plan[:40]} == {"gemma4:26b"} and {r.arm for r in plan[:40]} == {"L", "B"}
-    assert [r.model for r in (plan[40], plan[80], plan[120])] == ["gemma4:12b", "gemma4:e4b", "gemma4:31b"]
+    assert [r.model for r in (plan[40], plan[80])] == ["gemma4:12b", "gemma4:e4b"]
+    # Deviation 2026-11-04: MoE long runs and MoE LC move before the 31B block.
+    assert all(r.long and r.model == "gemma4:26b" for r in plan[120:126])
+    assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[126:136])
+    assert all(r.model == "gemma4:31b" for r in plan[136:])
     long = [r for r in plan if r.long]
     assert len(long) == 6 and {(r.task, r.max_iter) for r in long} == {("circle_packing", 1000), ("knn", 500)}
-    assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[-10:])
     assert {r.seed for r in plan if r.arm == "LC"} == {101, 202, 303, 404, 505}
     assert plan[0].dirname == "circle_packing_L_s101" and long[0].dirname.endswith("_long")
     assert plan[0].slug == "gemma4-26b"
+
+
+def test_31b_runs_one_at_a_time(tmp_path):
+    big = [r for r in study_plan() if r.model == "gemma4:31b"]
+    out = list(batches(big, tmp_path))
+    assert len(out) == 20 and all(len(b) == 1 for b in out)
+    assert study.SERVING_PARALLEL["gemma4:31b"] == 1
+
+
+def test_lc_deferred_until_agy_ready_then_runs_next(tmp_path):
+    lc = [r for r in study_plan() if r.arm == "LC"][:2]
+    big = [r for r in study_plan() if r.model == "gemma4:31b"][:3]
+    answers = iter([False, False, True])  # owner logs in while the first 31B run is going
+    launched = []
+    result = study.main(tmp_path, FakeSync(), plan=lc + big,
+                        runner=lambda spec, root: launched.append(spec) or FakeProc(),
+                        prepare_model=lambda model: None, agy_check=lambda: next(answers, True), sleep=lambda s: None)
+    assert result == "done"
+    assert launched == [big[0], big[1], lc[0], lc[1], big[2]]
 
 
 def test_batches_never_mix_models(tmp_path):
