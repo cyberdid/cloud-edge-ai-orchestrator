@@ -28,11 +28,16 @@ BIG = "gemma4:31b"
 TASKS = ("circle_packing", "knn")
 SEEDS = tuple(101 * i for i in range(1, 11))
 LC_SEEDS = SEEDS[:5]
-# 31B dense runs ~10 tokens/s on the L4 (spike 2026-10-30), ~6x slower than the MoE:
-# 5 seeds keep the study under the compute-unit cap.
-SEEDS_BY_MODEL = {"gemma4:31b": SEEDS[:5]}
+# 31B dense runs ~10 tokens/s on the L4 (spike 2026-10-30), ~6x slower than the MoE.
+# Deviation 2026-11-05 (docs/colab_scale/DEVIATIONS.md): 31B cut to circle packing,
+# 3 seeds, so it fits the cap.
+SEEDS_BY_MODEL = {"gemma4:31b": SEEDS[:3]}
+TASKS_BY_MODEL = {"gemma4:31b": ("circle_packing",)}
 LONG_SEEDS = SEEDS[:3]
 LONG_ITERATIONS = {"circle_packing": 1000, "knn": 500}
+# Deviation 2026-11-05, exploratory: best-of-N with the long-run call budget, the
+# matching control for the MoE circle-packing long runs.
+LONG_B_TASKS = ("circle_packing",)
 CANDIDATE_PYTHON = "/opt/oe-cand/bin/python"
 QUOTA_EXIT = 3
 # Runs at once / Ollama slots per model. Two 31B streams got 3.4 tokens/s each (6.8 in
@@ -64,7 +69,7 @@ class RunSpec:
 
 def study_plan() -> list[RunSpec]:
     plan = [RunSpec(model, task, arm, seed)
-            for model in MODELS for arm in ("L", "B") for task in TASKS
+            for model in MODELS for arm in ("L", "B") for task in TASKS_BY_MODEL.get(model, TASKS)
             for seed in SEEDS_BY_MODEL.get(model, SEEDS)]
     # Deviation 2026-11-04 (docs/colab_scale/DEVIATIONS.md): 31B runs ~3x slower than the
     # spike estimate, so the MoE long runs and MoE LC go before the 31B block, which takes
@@ -72,6 +77,7 @@ def study_plan() -> list[RunSpec]:
     late = [r for r in plan if r.model == BIG]
     plan = [r for r in plan if r.model != BIG]
     plan += [RunSpec(MOE, task, "L", seed, LONG_ITERATIONS[task], long=True) for task in TASKS for seed in LONG_SEEDS]
+    plan += [RunSpec(MOE, task, "B", seed, LONG_ITERATIONS[task], long=True) for task in LONG_B_TASKS for seed in LONG_SEEDS]
     plan += [RunSpec(MOE, task, "LC", seed) for task in TASKS for seed in LC_SEEDS]
     return plan + late
 

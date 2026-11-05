@@ -38,14 +38,18 @@ def complete(root, spec):
 
 def test_plan_order_and_counts():
     plan = study_plan()
-    assert len(plan) == 156
+    assert len(plan) == 145
     assert {r.model for r in plan[:40]} == {"gemma4:26b"} and {r.arm for r in plan[:40]} == {"L", "B"}
     assert [r.model for r in (plan[40], plan[80])] == ["gemma4:12b", "gemma4:e4b"]
     # Deviation 2026-11-04: MoE long runs and MoE LC move before the 31B block.
-    assert all(r.long and r.model == "gemma4:26b" for r in plan[120:126])
-    assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[126:136])
-    assert all(r.model == "gemma4:31b" for r in plan[136:])
-    long = [r for r in plan if r.long]
+    assert all(r.long and r.model == "gemma4:26b" and r.arm == "L" for r in plan[120:126])
+    # Deviation 2026-11-05: best-of-N long control for circle packing, then LC, then 31B.
+    assert all(r.long and r.arm == "B" and r.task == "circle_packing" and r.max_iter == 1000 for r in plan[126:129])
+    assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[129:139])
+    big = plan[139:]
+    assert all(r.model == "gemma4:31b" for r in big)
+    assert {(r.task, r.arm, r.seed) for r in big} == {("circle_packing", a, s) for a in "LB" for s in (101, 202, 303)}
+    long = [r for r in plan if r.long and r.arm == "L"]
     assert len(long) == 6 and {(r.task, r.max_iter) for r in long} == {("circle_packing", 1000), ("knn", 500)}
     assert {r.seed for r in plan if r.arm == "LC"} == {101, 202, 303, 404, 505}
     assert plan[0].dirname == "circle_packing_L_s101" and long[0].dirname.endswith("_long")
@@ -55,7 +59,7 @@ def test_plan_order_and_counts():
 def test_31b_runs_one_at_a_time(tmp_path):
     big = [r for r in study_plan() if r.model == "gemma4:31b"]
     out = list(batches(big, tmp_path))
-    assert len(out) == 20 and all(len(b) == 1 for b in out)
+    assert len(out) == 6 and all(len(b) == 1 for b in out)
     assert study.SERVING_PARALLEL["gemma4:31b"] == 1
 
 
@@ -129,11 +133,12 @@ def test_finished_runs_are_pushed(tmp_path):
     assert sync.states[-1]["phase"] == "done"
 
 
-def test_31b_runs_five_seeds_and_plan_total():
+def test_31b_runs_three_seeds_circle_packing_and_plan_total():
+    # Deviation 2026-11-05: 31B cut from 2 tasks x 5 seeds to circle packing x 3 seeds.
     plan = study_plan()
     big = [r for r in plan if r.model == "gemma4:31b"]
-    assert len(big) == 20 and {r.seed for r in big} == {101, 202, 303, 404, 505}
-    assert len(plan) == 156
+    assert len(big) == 6 and {r.seed for r in big} == {101, 202, 303} and {r.task for r in big} == {"circle_packing"}
+    assert len(plan) == 145
 
 
 def test_ensure_ollama_starts_server_when_down():
@@ -206,3 +211,15 @@ def test_login_window_expiry_defers_lc(tmp_path):
                         prepare_model=lambda model: None, agy_check=lambda: False,
                         sleep=lambda s: None, login_window=lambda: True, login_wait_s=120)
     assert result == "blocked_agy" and launched == [big[0]]
+
+
+def test_long_b_control_pairs_with_remaining_long_runs(tmp_path):
+    """With the circle-packing L long runs done, the remaining MoE long runs pair up evenly."""
+    plan = study_plan()
+    for r in plan:
+        if not (r.long or r.arm == "LC" or r.model == "gemma4:31b") or (r.long and r.arm == "L" and r.task == "circle_packing"):
+            r.path(tmp_path).mkdir(parents=True)
+            (r.path(tmp_path) / "manifest.json").write_text('{"status": "complete"}')
+    first = [[r.dirname for r in b] for b in list(batches(plan, tmp_path))[:3]]
+    assert first == [["knn_L_s101_long", "knn_L_s202_long"], ["knn_L_s303_long", "circle_packing_B_s101_long"],
+                     ["circle_packing_B_s202_long", "circle_packing_B_s303_long"]]
