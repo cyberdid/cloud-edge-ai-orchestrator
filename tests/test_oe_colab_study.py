@@ -38,7 +38,7 @@ def complete(root, spec):
 
 def test_plan_order_and_counts():
     plan = study_plan()
-    assert len(plan) == 145
+    assert len(plan) == 149
     assert {r.model for r in plan[:40]} == {"gemma4:26b"} and {r.arm for r in plan[:40]} == {"L", "B"}
     assert [r.model for r in (plan[40], plan[80])] == ["gemma4:12b", "gemma4:e4b"]
     # Deviation 2026-11-04: MoE long runs and MoE LC move before the 31B block.
@@ -48,7 +48,9 @@ def test_plan_order_and_counts():
     assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[129:139])
     big = plan[139:]
     assert all(r.model == "gemma4:31b" for r in big)
-    assert {(r.task, r.arm, r.seed) for r in big} == {("circle_packing", a, s) for a in "LB" for s in (101, 202, 303)}
+    assert {(r.task, r.arm, r.seed) for r in big[:6]} == {("circle_packing", a, s) for a in "LB" for s in (101, 202, 303)}
+    # Deviation 2026-11-06: seeds 404/505 queued after the three-seed block.
+    assert [(r.arm, r.seed) for r in big[6:]] == [("L", 404), ("L", 505), ("B", 404), ("B", 505)]
     long = [r for r in plan if r.long and r.arm == "L"]
     assert len(long) == 6 and {(r.task, r.max_iter) for r in long} == {("circle_packing", 1000), ("knn", 500)}
     assert {r.seed for r in plan if r.arm == "LC"} == {101, 202, 303, 404, 505}
@@ -59,7 +61,7 @@ def test_plan_order_and_counts():
 def test_31b_runs_one_at_a_time(tmp_path):
     big = [r for r in study_plan() if r.model == "gemma4:31b"]
     out = list(batches(big, tmp_path))
-    assert len(out) == 6 and all(len(b) == 1 for b in out)
+    assert len(out) == 10 and all(len(b) == 1 for b in out)
     assert study.SERVING_PARALLEL["gemma4:31b"] == 1
 
 
@@ -133,12 +135,12 @@ def test_finished_runs_are_pushed(tmp_path):
     assert sync.states[-1]["phase"] == "done"
 
 
-def test_31b_runs_three_seeds_circle_packing_and_plan_total():
-    # Deviation 2026-11-05: 31B cut from 2 tasks x 5 seeds to circle packing x 3 seeds.
+def test_31b_runs_circle_packing_five_seeds_and_plan_total():
+    # Deviations 2026-11-05/06: 31B runs circle packing only; seeds 404/505 come last.
     plan = study_plan()
     big = [r for r in plan if r.model == "gemma4:31b"]
-    assert len(big) == 6 and {r.seed for r in big} == {101, 202, 303} and {r.task for r in big} == {"circle_packing"}
-    assert len(plan) == 145
+    assert len(big) == 10 and {r.seed for r in big} == {101, 202, 303, 404, 505} and {r.task for r in big} == {"circle_packing"}
+    assert len(plan) == 149
 
 
 def test_ensure_ollama_starts_server_when_down():

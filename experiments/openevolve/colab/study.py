@@ -33,6 +33,9 @@ LC_SEEDS = SEEDS[:5]
 # 3 seeds, so it fits the cap.
 SEEDS_BY_MODEL = {"gemma4:31b": SEEDS[:3]}
 TASKS_BY_MODEL = {"gemma4:31b": ("circle_packing",)}
+# Deviation 2026-11-06: units left over, so 31B gets back seeds 404/505 on circle packing,
+# queued after the three-seed block so that block completes first.
+BIG_EXTRA_SEEDS = SEEDS[3:5]
 LONG_SEEDS = SEEDS[:3]
 LONG_ITERATIONS = {"circle_packing": 1000, "knn": 500}
 # Deviation 2026-11-05, exploratory: best-of-N with the long-run call budget, the
@@ -79,6 +82,8 @@ def study_plan() -> list[RunSpec]:
     plan += [RunSpec(MOE, task, "L", seed, LONG_ITERATIONS[task], long=True) for task in TASKS for seed in LONG_SEEDS]
     plan += [RunSpec(MOE, task, "B", seed, LONG_ITERATIONS[task], long=True) for task in LONG_B_TASKS for seed in LONG_SEEDS]
     plan += [RunSpec(MOE, task, "LC", seed) for task in TASKS for seed in LC_SEEDS]
+    late += [RunSpec(BIG, task, arm, seed) for arm in ("L", "B") for task in TASKS_BY_MODEL[BIG]
+             for seed in BIG_EXTRA_SEEDS]
     return plan + late
 
 
