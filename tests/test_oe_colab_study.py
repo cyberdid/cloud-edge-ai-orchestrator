@@ -38,7 +38,7 @@ def complete(root, spec):
 
 def test_plan_order_and_counts():
     plan = study_plan()
-    assert len(plan) == 149
+    assert len(plan) == 179
     assert {r.model for r in plan[:40]} == {"gemma4:26b"} and {r.arm for r in plan[:40]} == {"L", "B"}
     assert [r.model for r in (plan[40], plan[80])] == ["gemma4:12b", "gemma4:e4b"]
     # Deviation 2026-11-04: MoE long runs and MoE LC move before the 31B block.
@@ -46,16 +46,57 @@ def test_plan_order_and_counts():
     # Deviation 2026-11-05: best-of-N long control for circle packing, then LC, then 31B.
     assert all(r.long and r.arm == "B" and r.task == "circle_packing" and r.max_iter == 1000 for r in plan[126:129])
     assert all(r.arm == "LC" and r.model == "gemma4:26b" for r in plan[129:139])
-    big = plan[139:]
+    big = plan[139:149]
     assert all(r.model == "gemma4:31b" for r in big)
     assert {(r.task, r.arm, r.seed) for r in big[:6]} == {("circle_packing", a, s) for a in "LB" for s in (101, 202, 303)}
     # Deviation 2026-11-06: seeds 404/505 queued after the three-seed block.
     assert [(r.arm, r.seed) for r in big[6:]] == [("L", 404), ("L", 505), ("B", 404), ("B", 505)]
     long = [r for r in plan if r.long and r.arm == "L"]
     assert len(long) == 6 and {(r.task, r.max_iter) for r in long} == {("circle_packing", 1000), ("knn", 500)}
-    assert {r.seed for r in plan if r.arm == "LC"} == {101, 202, 303, 404, 505}
+    assert {r.seed for r in plan[:149] if r.arm == "LC"} == {101, 202, 303, 404, 505}
     assert plan[0].dirname == "circle_packing_L_s101" and long[0].dirname.endswith("_long")
     assert plan[0].slug == "gemma4-26b"
+
+
+def test_lc_extension_has_fifteen_matched_seeds_per_task_without_duplicate_runs():
+    plan = study_plan()
+    assert len(plan) == 179
+    assert len({(r.model, r.dirname) for r in plan}) == 179
+    for task in ("circle_packing", "knn"):
+        lc = {r.seed for r in plan if r.model == "gemma4:26b" and r.task == task and r.arm == "LC"}
+        local = {r.seed for r in plan if r.model == "gemma4:26b" and r.task == task and r.arm == "L" and not r.long}
+        assert lc == local == {101, 202, 303, 404, 505, 606, 707, 808, 909, 1010,
+                               1111, 1212, 1313, 1414, 1515}
+    extra = plan[149:]
+    assert len([r for r in extra if r.arm == "LC"]) == 20
+    assert len([r for r in extra if r.arm == "L"]) == 10
+    assert all(r.model == "gemma4:26b" and r.max_iter == 100 and not r.long for r in extra)
+    # Finish the already-controlled seeds first; new controls precede each new LC pair.
+    assert [(r.task, r.arm, r.seed) for r in extra[:2]] == [
+        ("circle_packing", "LC", 606), ("knn", "LC", 606)]
+    assert [(r.task, r.arm, r.seed) for r in extra[10:14]] == [
+        ("circle_packing", "L", 1111), ("knn", "L", 1111),
+        ("circle_packing", "LC", 1111), ("knn", "LC", 1111)]
+
+
+def test_resume_extension_skips_all_completed_original_runs(tmp_path):
+    plan = study_plan()
+    for spec in plan[:149]:
+        complete(tmp_path, spec)
+    launched = []
+
+    def runner(spec, root):
+        launched.append(spec)
+        complete(root, spec)
+        return FakeProc()
+
+    sync = FakeSync()
+    study.main(tmp_path, sync, runner=runner, prepare_model=lambda model: None,
+               agy_check=lambda: True, sleep=lambda s: None)
+    assert len(launched) == 30
+    assert launched == plan[149:]
+    assert sync.states[-1]["done"] == 179
+    assert sync.states[-1]["phase"] == "done"
 
 
 def test_31b_runs_one_at_a_time(tmp_path):
@@ -140,7 +181,7 @@ def test_31b_runs_circle_packing_five_seeds_and_plan_total():
     plan = study_plan()
     big = [r for r in plan if r.model == "gemma4:31b"]
     assert len(big) == 10 and {r.seed for r in big} == {101, 202, 303, 404, 505} and {r.task for r in big} == {"circle_packing"}
-    assert len(plan) == 149
+    assert len(plan) == 179
 
 
 def test_ensure_ollama_starts_server_when_down():

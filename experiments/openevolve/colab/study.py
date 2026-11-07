@@ -28,6 +28,7 @@ BIG = "gemma4:31b"
 TASKS = ("circle_packing", "knn")
 SEEDS = tuple(101 * i for i in range(1, 11))
 LC_SEEDS = SEEDS[:5]
+LC_EXTENSION_ID = "lc-30-2026-11-07"
 # 31B dense runs ~10 tokens/s on the L4 (spike 2026-10-30), ~6x slower than the MoE.
 # Deviation 2026-11-05 (docs/colab_scale/DEVIATIONS.md): 31B cut to circle packing,
 # 3 seeds, so it fits the cap.
@@ -84,7 +85,14 @@ def study_plan() -> list[RunSpec]:
     plan += [RunSpec(MOE, task, "LC", seed) for task in TASKS for seed in LC_SEEDS]
     late += [RunSpec(BIG, task, arm, seed) for arm in ("L", "B") for task in TASKS_BY_MODEL[BIG]
              for seed in BIG_EXTRA_SEEDS]
-    return plan + late
+    # Owner-approved descriptive extension, 2026-11-07: preserve the entire 149-run
+    # prefix. Seeds 606..1010 already have L controls; seeds 1111..1515 need new L
+    # controls before their LC runs. Balance tasks within each seed if the cap cuts
+    # the tail. The original five-seed LC cohort remains separately identifiable.
+    extension = [RunSpec(MOE, task, "LC", seed) for seed in SEEDS[5:] for task in TASKS]
+    extension += [RunSpec(MOE, task, arm, seed) for seed in (1111, 1212, 1313, 1414, 1515)
+                  for arm in ("L", "LC") for task in TASKS]
+    return plan + late + extension
 
 
 def run_status(path: Path) -> str:
@@ -258,7 +266,8 @@ def main(root: Path, sync, plan: list[RunSpec] | None = None, runner: Callable =
          login_window: Callable[[], bool] = lambda: False, login_wait_s: float = 3600) -> str:
     plan = plan if plan is not None else study_plan()
     root = Path(root)
-    state = {"phase": "running", "blocked": None, "host": socket.gethostname(), "total": len(plan)}
+    state = {"phase": "running", "blocked": None, "host": socket.gethostname(), "total": len(plan),
+             "plan_revision": LC_EXTENSION_ID}
 
     def write(**fields) -> None:
         state.update(fields, updated=time.time(),

@@ -22,6 +22,84 @@ def test_done_stops_session():
     assert decide(state(phase="done"), [], balance=300, now=NOW) == "none"
 
 
+def test_completed_original_plan_extends_in_place_but_respects_cap_and_blocks():
+    old = state(phase="done", total=149, done=149)
+    assert decide(old, [SESSION], balance=70, now=NOW) == "extend"
+    assert decide(old, [], balance=70, now=NOW) == "start"
+    assert decide(old, ["?"], balance=70, now=NOW) == "none"
+    assert decide(old, [SESSION], balance=19, now=NOW) == "stop_capped"
+    assert decide(dict(old, blocked="argon_quota"), [SESSION], balance=70, now=NOW) == "stop"
+    assert decide(dict(old, phase="running"), [SESSION], balance=70, now=NOW) == "none"
+    assert decide(state(phase="done", total=179, done=179), [SESSION], balance=70, now=NOW) == "stop"
+
+
+def test_extend_uploads_only_driver_and_keeps_the_live_vm(monkeypatch, tmp_path):
+    import subprocess
+    from experiments.openevolve.colab import watchdog
+
+    states, commands, cells = [], [], []
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    monkeypatch.setattr(watchdog, "write_state", lambda s: states.append(dict(s)))
+
+    def colab(*args, **kwargs):
+        commands.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="ok", stderr="")
+
+    monkeypatch.setattr(watchdog, "colab", colab)
+    monkeypatch.setattr(watchdog, "start_attached_client", lambda cell: cells.append(cell.read_text()))
+    monkeypatch.setattr(watchdog, "wait_running", lambda: True)
+    watchdog.extend_vm(state(phase="done", total=149, done=149))
+    assert [c[0] for c in commands] == ["upload"]  # no stop/new/restart-kernel
+    assert commands[0][-1] == "/root/oe/experiments/openevolve/colab/study.py"
+    assert len(cells) == 1
+    assert states[-1]["phase"] == "starting" and states[-1]["total"] == 179
+    assert states[-1]["done"] == 149
+
+
+def test_extension_upload_failure_does_not_launch_or_change_state(monkeypatch, tmp_path):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    monkeypatch.setattr(watchdog, "colab", lambda *a, **kw: subprocess.CompletedProcess(a, 1, stdout="", stderr="failed"))
+    states, launched = [], []
+    monkeypatch.setattr(watchdog, "write_state", states.append)
+    monkeypatch.setattr(watchdog, "start_attached_client", launched.append)
+    with pytest.raises(RuntimeError, match="upload"):
+        watchdog.extend_vm(state(phase="done", total=149, done=149))
+    assert states == launched == []
+
+
+def test_extension_refuses_in_progress_or_incomplete_original_plan(monkeypatch):
+    import pytest
+    from experiments.openevolve.colab import watchdog
+
+    for invalid in (state(total=149, done=139), state(phase="done", total=149, done=148),
+                    state(phase="done", total=149, done=149, blocked="argon_quota")):
+        with pytest.raises(RuntimeError, match="completed original plan"):
+            watchdog.extend_vm(invalid)
+
+
+def test_extension_start_failure_stops_client_and_blocks_recovery(monkeypatch, tmp_path):
+    import subprocess
+    import pytest
+    from experiments.openevolve.colab import watchdog
+
+    states, stopped = [], []
+    monkeypatch.setattr(watchdog, "CACHE", tmp_path)
+    monkeypatch.setattr(watchdog, "colab", lambda *a, **kw: subprocess.CompletedProcess(a, 0, stdout="ok", stderr=""))
+    monkeypatch.setattr(watchdog, "write_state", lambda s: states.append(dict(s)))
+    monkeypatch.setattr(watchdog, "start_attached_client", lambda cell: None)
+    monkeypatch.setattr(watchdog, "wait_running", lambda: False)
+    monkeypatch.setattr(watchdog, "_run", lambda cmd, **kw: stopped.append(cmd))
+    with pytest.raises(RuntimeError, match="did not start"):
+        watchdog.extend_vm(state(phase="done", total=149, done=149))
+    assert stopped == [["systemctl", "--user", "stop", "oe-colab-client.service"]]
+    assert states[-1]["blocked"] == "extension_start_failed"
+    assert decide(states[-1], [SESSION], balance=70, now=NOW) == "stop"
+
+
 def test_blocked_stops_and_does_not_restart():
     assert decide(state(phase="blocked", blocked="agy_login"), [SESSION], balance=300, now=NOW) == "stop"
     assert decide(state(phase="blocked", blocked="argon_quota"), [], balance=300, now=NOW) == "none"

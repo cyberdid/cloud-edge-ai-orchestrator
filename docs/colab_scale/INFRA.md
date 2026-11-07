@@ -49,6 +49,12 @@ rm ~/.config/oe-colab/sa-key.json
 
 ## MoE LC login (after the Argon quota refresh)
 
+The [2026-11-07 extension](LC_EXTENSION_2026-11-07.md) targets 30 LC runs total.
+The watchdog hands off from the completed 149-run driver to the 179-run driver on
+the same live VM to retain the owner's login. While the original LC cohort is
+running, `state.total` remains 149; the new driver writes total 179 at handoff.
+The spending cap and unknown-assignment protections remain in force.
+
 LC needs the owner's `agy` login on the VM that runs it; a login is per VM and
 credentials are never copied to the VM. Once spending reaches cap − 20 units while LC
 waits, the watchdog stops the VM (`blocked: "lc_reserve"`). When the quota has refreshed

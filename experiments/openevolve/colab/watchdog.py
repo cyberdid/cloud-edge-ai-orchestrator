@@ -17,6 +17,8 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from experiments.openevolve.colab.study import LC_EXTENSION_ID, study_plan
+
 BUCKET = "gs://oe-colab-scale-0903767759"
 SESSION = "oe-scale"
 START_BALANCE = 399.47
@@ -38,7 +40,7 @@ print(subprocess.run("cd /root/oe && OE_COLAB_RUNS=/root/oe-runs .venv/bin/pytho
 CLIENT_UNIT = "oe-colab-client.service"
 CELL_TIMEOUT_S = 48 * 60 * 60
 
-Action = Literal["none", "start", "stop", "stop_capped", "hold_lc"]
+Action = Literal["none", "start", "stop", "stop_capped", "hold_lc", "extend"]
 
 
 def decide(state: dict | None, sessions: list[str], balance: float, now: float,
@@ -46,7 +48,16 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
     live = SESSION in sessions
     if start_balance - balance >= cap:
         return "stop_capped" if live else "none"
-    if state and (state.get("phase") == "done" or state.get("blocked")):
+    if state and state.get("blocked"):
+        return "stop" if live else "none"
+    # The live driver keeps its original fixed plan. Once it has persisted all 149
+    # completions, hand off to the extended driver on this VM, retaining agy login.
+    # Unknown sessions and the spending cap always retain their protections.
+    if state and state.get("phase") == "done" and state.get("total") == 149 and state.get("done") == 149:
+        if "?" in sessions:
+            return "none"
+        return "extend" if live else "start"
+    if state and state.get("phase") == "done":
         return "stop" if live else "none"
     if state and state.get("waiting") == "agy_login" and start_balance - balance >= cap - LC_RESERVE:
         return "hold_lc" if live else "none"
@@ -127,6 +138,29 @@ def start_attached_client(cell: Path) -> None:
                    "--timeout", str(CELL_TIMEOUT_S)], timeout=30)
     if client.returncode:
         raise RuntimeError(f"cannot start attached Colab client: {client.stderr[-500:]}")
+
+
+def extend_vm(state: dict) -> None:
+    """Replace only the completed 149-run driver; retain the VM and its login."""
+    if state.get("phase") != "done" or state.get("total") != 149 or state.get("done") != 149 or state.get("blocked"):
+        raise RuntimeError("extension requires the completed original plan")
+    uploaded = colab("upload", "-s", SESSION,
+                     str(REPO / "experiments/openevolve/colab/study.py"),
+                     "/root/oe/experiments/openevolve/colab/study.py")
+    if uploaded.returncode:
+        raise RuntimeError("cannot upload extended driver; leaving completed VM untouched")
+    write_state(dict(state, phase="starting", blocked=None, waiting=None, total=len(study_plan()),
+                     plan_revision=LC_EXTENSION_ID, updated=time.time()))
+    cell = CACHE / "study_cell.py"
+    cell.write_text(CELL)
+    try:
+        start_attached_client(cell)
+        if not wait_running():
+            raise RuntimeError("extended study driver did not start")
+    except Exception:
+        _run(["systemctl", "--user", "stop", CLIENT_UNIT], timeout=30)
+        write_state(dict(state, phase="blocked", blocked="extension_start_failed", updated=time.time()))
+        raise
 
 
 def start_vm(state: dict | None) -> None:
@@ -225,6 +259,9 @@ def main() -> None:
         elif action == "start":
             start_vm(state)
             log({"event": "started"})
+        elif action == "extend":
+            extend_vm(state)
+            log({"event": "extension_started", "plan_revision": LC_EXTENSION_ID})
 
 
 if __name__ == "__main__":

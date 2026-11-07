@@ -3,6 +3,10 @@
 Recorded as required by `PREREGISTRATION.md` (tag `colab-scale-prereg`). Raw VM events:
 `gs://oe-colab-scale-0903767759/vm_log.jsonl`.
 
+Owner-approved LC extension (2026-11-07): [30 LC total and paired L controls](LC_EXTENSION_2026-11-07.md).
+The original registration remains unchanged; the current plan grows from 149 to 179
+runs by appending 20 LC and 10 L. The compute-unit cap remains 380.
+
 | when (EET) | what | effect on data |
 |---|---|---|
 | 2026-10-30 ~18:40 | First VM (started 11:32) reclaimed by Colab ~1 h after the laptop (watchdog host and `colab exec` client) went to sleep. No watchdog ran until the laptop woke. | Last sync 18:37; `knn_L_s101` (MoE) stopped at 90 logged calls and resumed on the next VM. ~20 h without a VM; no compute units spent. |
