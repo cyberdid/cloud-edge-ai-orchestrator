@@ -25,6 +25,10 @@ The current 149-run list is preserved exactly as a prefix. The extension appends
 30 runs (20 LC + 10 L), so the full plan contains **179 runs**. B retains its
 existing ten seeds per task; added controls address RQ-cloud (LC versus L),
 not an expanded three-arm B/L/LC comparison on 15 seeds.
+RQ-scale comparisons retain the original seed cohorts; do not pool the new L
+controls into MoE's size-ladder baseline while other models keep ten seeds. The
+generic laptop-pilot aggregator does not separate Colab's long-run budgets or
+these cohorts automatically; filter the intended cohort and budget explicitly.
 
 ## Fixed order and settings
 
