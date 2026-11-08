@@ -1,7 +1,7 @@
 # LC had higher primary scores on all nine kNN pairs; circle-packing results were mixed
 
 **Snapshot:** 2026-11-08 (Europe/Kyiv)
-**Study:** Gemma 4 26B OpenEvolve runs, local-only arm `L` versus cloud-assisted arm `LC`
+**Study:** Gemma 4 26B OpenEvolve runs, Gemma-only arm `L` versus cloud-assisted arm `LC`
 **Status:** stopped after Argon quota exhaustion; no further Argon calls are planned.
 
 ## Summary
