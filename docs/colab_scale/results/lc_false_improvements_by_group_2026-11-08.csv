@@ -1,0 +1,9 @@
+cohort,task,arm,complete_runs,above_seed_candidate_evaluations,false_improvements,pooled_false_improvement_rate,median_run_false_improvement_rate,shipped_false_runs
+existing_controls_606_909,circle_packing,L,4,165,36,0.21818181818181817,0.17914438502673796,0
+existing_controls_606_909,circle_packing,LC,4,245,72,0.2938775510204082,0.27295081967213114,0
+existing_controls_606_909,knn,L,4,0,0,,0.0,0
+existing_controls_606_909,knn,LC,4,111,1,0.009009009009009009,0.0,0
+preregistered_101_505,circle_packing,L,5,235,82,0.34893617021276596,0.37142857142857144,2
+preregistered_101_505,circle_packing,LC,5,241,68,0.2821576763485477,0.3090909090909091,2
+preregistered_101_505,knn,L,5,1,1,1.0,0.0,1
+preregistered_101_505,knn,LC,5,102,3,0.029411764705882353,0.0,0
