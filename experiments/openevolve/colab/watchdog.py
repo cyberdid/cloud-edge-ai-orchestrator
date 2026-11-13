@@ -24,7 +24,9 @@ SESSION = "oe-scale"
 START_BALANCE = 399.47
 CAP_UNITS = 380.0  # raised from 330 on 2026-11-02, see docs/colab_scale/DEVIATIONS.md
 # The last units are kept for MoE LC while it waits for the Argon quota (deviation 2026-11-04).
-LC_RESERVE = 20.0
+# Deviation 2026-11-10: Colab LC is frozen (no agy on Colab any more), so no units are
+# held back for it; the Gemma-only extension L controls may use the cap. Was 20.0.
+LC_RESERVE = 0.0
 STALE_S = 1800
 FIRST_MODEL = "gemma4:26b"
 REPO = Path(__file__).resolve().parents[3]
@@ -44,7 +46,9 @@ Action = Literal["none", "start", "stop", "stop_capped", "hold_lc", "extend"]
 
 
 def decide(state: dict | None, sessions: list[str], balance: float, now: float,
-           start_balance: float = START_BALANCE, cap: float = CAP_UNITS) -> Action:
+           start_balance: float = START_BALANCE, cap: float = CAP_UNITS,
+           lc_reserve: float | None = None) -> Action:
+    lc_reserve = LC_RESERVE if lc_reserve is None else lc_reserve
     live = SESSION in sessions
     if start_balance - balance >= cap:
         return "stop_capped" if live else "none"
@@ -59,7 +63,7 @@ def decide(state: dict | None, sessions: list[str], balance: float, now: float,
         return "extend" if live else "start"
     if state and state.get("phase") == "done":
         return "stop" if live else "none"
-    if state and state.get("waiting") == "agy_login" and start_balance - balance >= cap - LC_RESERVE:
+    if state and state.get("waiting") == "agy_login" and start_balance - balance >= cap - lc_reserve:
         return "hold_lc" if live else "none"
     # Unknown assignments cannot safely be stopped or replaced by name.
     if "?" in sessions:
