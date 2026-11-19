@@ -1,0 +1,543 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/paper_ii/revision_metrics.py",
+  "reproducible_without_model_or_sandbox_calls": true,
+  "colab_final_inventory": {
+    "planned": 179,
+    "completed": 167,
+    "not_started": 10,
+    "partial_quota_paused": 2,
+    "source": "docs/colab_scale/FINAL_RUNS_2026-11-11.json"
+  },
+  "selection_regret": {
+    "definition": "max(seed_verified_score, verified score among valid candidates in the reported complete pool) - selected endpoint; negative values are forbidden",
+    "coverage_note": "Complete candidate-level archives are not in this Git snapshot. Long-budget circle best-valid scores are transcribed at 3-decimal precision from the published report. No all-candidate kNN regret is estimated.",
+    "runs": [
+      {
+        "run_id": "B-long_s101",
+        "task": "circle_packing",
+        "arm": "B-long",
+        "seed": 101,
+        "budget_calls": 1000,
+        "best_valid_reported": 1.936,
+        "selected_verified": 1.9358037746804877,
+        "selected_status": "valid",
+        "selection_regret_approx": 0.000196,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      },
+      {
+        "run_id": "B-long_s202",
+        "task": "circle_packing",
+        "arm": "B-long",
+        "seed": 202,
+        "budget_calls": 1000,
+        "best_valid_reported": 2.072,
+        "selected_verified": 2.071893360998724,
+        "selected_status": "valid",
+        "selection_regret_approx": 0.000107,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      },
+      {
+        "run_id": "B-long_s303",
+        "task": "circle_packing",
+        "arm": "B-long",
+        "seed": 303,
+        "budget_calls": 1000,
+        "best_valid_reported": 1.924,
+        "selected_verified": 1.9239698190896206,
+        "selected_status": "valid",
+        "selection_regret_approx": 3e-05,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      },
+      {
+        "run_id": "L-long_s101",
+        "task": "circle_packing",
+        "arm": "L-long",
+        "seed": 101,
+        "budget_calls": 1000,
+        "best_valid_reported": 2.432,
+        "selected_verified": 2.4317195699616714,
+        "selected_status": "valid",
+        "selection_regret_approx": 0.00028,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      },
+      {
+        "run_id": "L-long_s202",
+        "task": "circle_packing",
+        "arm": "L-long",
+        "seed": 202,
+        "budget_calls": 1000,
+        "best_valid_reported": 2.204,
+        "selected_verified": 0.0,
+        "selected_status": "invalid_selection_seed_fallback",
+        "selection_regret_approx": 2.204,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      },
+      {
+        "run_id": "L-long_s303",
+        "task": "circle_packing",
+        "arm": "L-long",
+        "seed": 303,
+        "budget_calls": 1000,
+        "best_valid_reported": 2.258,
+        "selected_verified": 0.0,
+        "selected_status": "invalid_selection_seed_fallback",
+        "selection_regret_approx": 2.258,
+        "precision": "best-valid value reported to 3 decimals; selected endpoint from JSON at full stored precision",
+        "sources": [
+          "docs/COLAB_SCALE_RESULTS.md: long-budget circle-packing table",
+          "docs/colab_scale/results/exploratory_tests_2026-11-19.json:runs"
+        ]
+      }
+    ],
+    "L_long_invalid_selected_runs": 2,
+    "L_long_runs": 3,
+    "L_long_median_approx_regret": 2.204,
+    "B_long_median_approx_regret": 0.000107
+  },
+  "knn": {
+    "seed_score_pooled_median": 0.2234535519785333,
+    "seed_score_designated_calibration_median": 0.2379648971597082,
+    "lc_l_pairs": [
+      {
+        "seed": 101,
+        "L": {
+          "run_id": "knn_L_s101",
+          "seed": 101,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s101",
+          "seed": 101,
+          "code_sha256": "def459fffa9d5e2e0262c06a189f88448a2c7a4ef5d495421a5240b3487f1468",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 0.99985,
+          "holdout_speed_ratio_median": 0.46095360102184807,
+          "verified_score_median": 0.99985,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.7763964480214667
+      },
+      {
+        "seed": 202,
+        "L": {
+          "run_id": "knn_L_s202",
+          "seed": 202,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s202",
+          "seed": 202,
+          "code_sha256": "61917a17a5b947bbecc18d0996daeb774b1c77d1b0d5adf9d62e00b9d9071890",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.4678945625968048,
+          "verified_score_median": 1.0,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.7765464480214667
+      },
+      {
+        "seed": 303,
+        "L": {
+          "run_id": "knn_L_s303",
+          "seed": 303,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s303",
+          "seed": 303,
+          "code_sha256": "42431f6059a0d923ccf688a366cd0006018ffdf68d357ac7024aa8b4cb06cf33",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.7307720976303304,
+          "verified_score_median": 0.4681403712163454,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.24468681923781208
+      },
+      {
+        "seed": 404,
+        "L": {
+          "run_id": "knn_L_s404",
+          "seed": 404,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s404",
+          "seed": 404,
+          "code_sha256": "b4784753b30f39dde7c178e4f9f65bf9aad7b31ecb98267ecaf91dca63e5236f",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.6303872241299228,
+          "verified_score_median": 0.629107992864829,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.40565444088629565
+      },
+      {
+        "seed": 505,
+        "L": {
+          "run_id": "knn_L_s505",
+          "seed": 505,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s505",
+          "seed": 505,
+          "code_sha256": "2c36a2b0585a9c43c68e807b34aff04dbe9f7ea58a3640c4d5f7c4be540e13a8",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.4916971462627412,
+          "verified_score_median": 1.0,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.7765464480214667
+      },
+      {
+        "seed": 606,
+        "L": {
+          "run_id": "knn_L_s606",
+          "seed": 606,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s606",
+          "seed": 606,
+          "code_sha256": "1ac4e95838c668f6ac937464a85909ca62cb12c0194fe617a1d0bf9e10507e5b",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.48648864638116834,
+          "verified_score_median": 1.0,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.7765464480214667
+      },
+      {
+        "seed": 707,
+        "L": {
+          "run_id": "knn_L_s707",
+          "seed": 707,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s707",
+          "seed": 707,
+          "code_sha256": "dcce6b1ed1ba9867bc115305d5123db0984a7ea08fa0f5935a50c9a0edac3d93",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.7759430389597687,
+          "verified_score_median": 0.4152219712220681,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.1917684192435348
+      },
+      {
+        "seed": 808,
+        "L": {
+          "run_id": "knn_L_s808",
+          "seed": 808,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s808",
+          "seed": 808,
+          "code_sha256": "6ef09b0bfa013ea9383068e06e6e725c908fd135ef6f767ea2cf0118adc4fb01",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 0.4651074854917433,
+          "verified_score_median": 1.0,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": 0.7765464480214667
+      },
+      {
+        "seed": 909,
+        "L": {
+          "run_id": "knn_L_s909",
+          "seed": 909,
+          "code_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.0586684932162491,
+          "verified_score_median": 0.2234535519785333,
+          "repetitions": 8,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC": {
+          "run_id": "knn_LC_s909",
+          "seed": 909,
+          "code_sha256": "e5bcab12ac9b0c71bf80f1096d9fccc42359296987bc0d0156a0e1b27f9a5f98",
+          "valid_in_serial_recheck": true,
+          "distance_correctness": "passed independent check_neighbors and exact-copy rules",
+          "holdout_recall_median": 1.0,
+          "holdout_speed_ratio_median": 1.2550819446070112,
+          "verified_score_median": 0.15870691318770297,
+          "repetitions": 3,
+          "source": [
+            "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+            "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            "experiments/openevolve/tasks/knn/recheck.py"
+          ]
+        },
+        "LC_minus_L_verified_score": -0.06474663879083034
+      }
+    ],
+    "lc_selected_valid_count": 9,
+    "lc_selected_n": 9,
+    "lc_selected_holdout_recall_median_range": [
+      0.99985,
+      1.0
+    ],
+    "lc_selected_holdout_speed_ratio_medians": [
+      {
+        "seed": 101,
+        "ratio": 0.46095360102184807
+      },
+      {
+        "seed": 202,
+        "ratio": 0.4678945625968048
+      },
+      {
+        "seed": 303,
+        "ratio": 0.7307720976303304
+      },
+      {
+        "seed": 404,
+        "ratio": 0.6303872241299228
+      },
+      {
+        "seed": 505,
+        "ratio": 0.4916971462627412
+      },
+      {
+        "seed": 606,
+        "ratio": 0.48648864638116834
+      },
+      {
+        "seed": 707,
+        "ratio": 0.7759430389597687
+      },
+      {
+        "seed": 808,
+        "ratio": 0.4651074854917433
+      },
+      {
+        "seed": 909,
+        "ratio": 1.2550819446070112
+      }
+    ],
+    "speed_ratio_definition": "maximum candidate/exact elapsed-time ratio across three holdout sets; lower is faster; not absolute latency",
+    "distance_check": "Validity includes the independent check_neighbors contract, true squared distances, exact-copy rule and static restrictions.",
+    "rank_stability_selected_programs": {
+      "n_unique_code_hashes": 10,
+      "repetition_ids_are_ordinal_not_synchronized": true,
+      "comparisons": [
+        {
+          "rep_a": 0,
+          "rep_b": 1,
+          "kendall_tau_b": 0.8095238095238095,
+          "top5_overlap": 5,
+          "top_k": 5
+        },
+        {
+          "rep_a": 0,
+          "rep_b": 2,
+          "kendall_tau_b": 0.7619047619047619,
+          "top5_overlap": 4,
+          "top_k": 5
+        },
+        {
+          "rep_a": 1,
+          "rep_b": 2,
+          "kendall_tau_b": 0.7619047619047619,
+          "top5_overlap": 4,
+          "top_k": 5
+        }
+      ],
+      "selected_lc_hashes_cross_seed_median_threshold": 0,
+      "selected_lc_hashes_n": 9,
+      "top5_tie_break": "code_sha256 ascending"
+    },
+    "false_improvements": {
+      "candidate_evaluations_above_working_seed": 213,
+      "false_candidate_evaluations": 60,
+      "false_rate": 0.28169014084507044,
+      "invalid": 4,
+      "valid_but_verified_score_not_above_seed": 56,
+      "evaluations_not_unique_programs": true
+    }
+  },
+  "sources": {
+    "final_inventory": "docs/colab_scale/FINAL_RUNS_2026-11-11.json",
+    "run_level_summary": "docs/colab_scale/results/exploratory_tests_2026-11-19.json",
+    "published_long_best_valid": "docs/COLAB_SCALE_RESULTS.md",
+    "lc_run_inventory": "docs/colab_scale/results/lc_run_outcomes_2026-11-08.csv",
+    "lc_pairs": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv",
+    "lc_above_seed_evaluations": "docs/colab_scale/results/lc_above_seed_candidates_2026-11-08.csv",
+    "serial_rechecks": "docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+    "registered_recheck_implementation": "experiments/openevolve/tasks/knn/recheck.py",
+    "metric_definitions": "experiments/openevolve/tasks/knn/working_evaluator.py"
+  }
+}

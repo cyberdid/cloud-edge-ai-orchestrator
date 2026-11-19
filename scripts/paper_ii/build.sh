@@ -7,6 +7,7 @@ BUILD="$ROOT/tmp/pdfs/paper-ii"
 PY=${PY:-python3}
 TECTONIC=${TECTONIC:-$(command -v tectonic || printf '%s' "$HOME/.local/bin/tectonic")}
 
+PYTHONDONTWRITEBYTECODE=1 "$PY" "$ROOT/scripts/paper_ii/revision_metrics.py" --figures
 PYTHONDONTWRITEBYTECODE=1 "$PY" "$ROOT/scripts/paper_ii/make_figures.py"
 mkdir -p "$BUILD"
 for lang in en uk; do
