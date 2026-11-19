@@ -116,6 +116,20 @@ def _prepare_session(commit: str) -> None:
           "/content/paper2_pilot.py"], timeout=300)
     # Clear cached Python modules so a resumed kernel cannot import an earlier Git revision.
     _run([CLI, "restart-kernel", "-s", SESSION], timeout=300, check=False)
+    _wait_for_kernel_ready()
+
+
+def _wait_for_kernel_ready() -> None:
+    probe = ROOT / "kernel-ready-probe.py"
+    probe.write_text('print("PAPER2_KERNEL_READY")\n')
+    deadline = time.monotonic() + 120
+    while time.monotonic() < deadline:
+        result = _run([CLI, "exec", "-s", SESSION, "-f", str(probe), "--timeout", "30"],
+                      timeout=60, check=False)
+        if result.returncode == 0 and "PAPER2_KERNEL_READY" in result.stdout:
+            return
+        time.sleep(5)
+    raise RuntimeError("Colab kernel did not pass the readiness probe within 120 seconds")
 
 
 def _stop_session() -> None:
