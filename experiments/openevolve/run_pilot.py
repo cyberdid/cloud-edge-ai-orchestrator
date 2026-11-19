@@ -85,6 +85,30 @@ def _serve_in_process(router: Router):
     return process, ports.get(timeout=30)
 
 
+def run_coroutine_synchronously(coroutine):
+    """Run an async OpenEvolve job from both CLI and notebook event loops."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+
+    result = []
+    error = []
+
+    def run_in_thread():
+        try:
+            result.append(asyncio.run(coroutine))
+        except BaseException as exc:
+            error.append(exc)
+
+    worker = threading.Thread(target=run_in_thread)
+    worker.start()
+    worker.join()
+    if error:
+        raise error[0]
+    return result[0] if result else None
+
+
 def _git_sha() -> str:
     return os.environ.get("OE_PILOT_GIT_SHA") or subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True
@@ -174,7 +198,9 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
             if remaining > 0:
                 controller = OpenEvolve(str(spec["initial"]), str(selected_evaluator), config,
                                         output_dir=str(out / "openevolve"))
-                asyncio.run(controller.run(iterations=remaining, checkpoint_path=checkpoint))
+                run_coroutine_synchronously(
+                    controller.run(iterations=remaining, checkpoint_path=checkpoint)
+                )
         finally:
             server.terminate()
             server.join(10)

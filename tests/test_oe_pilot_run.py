@@ -1,6 +1,7 @@
 """OpenEvolve pilot: run driver for arms L / LC / B (stub LLM, real Docker sandbox)."""
 import json
 import os
+import asyncio
 
 import pytest
 
@@ -74,6 +75,16 @@ def test_no_diff_reply_counts_as_failed_attempt(tmp_path):
 
 def test_cloud_share_by_arm():
     assert run_pilot.CLOUD_SHARE == {"L": 0.0, "LC": 0.1, "B": 0.0}
+
+
+def test_coroutine_runner_supports_an_existing_event_loop():
+    async def scenario():
+        async def answer():
+            return 42
+
+        return run_pilot.run_coroutine_synchronously(answer())
+
+    assert asyncio.run(scenario()) == 42
 
 
 def test_evaluator_version_selects_knn_v2_only():
