@@ -27,3 +27,10 @@ def test_ensure_system_package_skips_installed_dependency(monkeypatch):
     paper2_pilot.ensure_system_package("zstd")
 
     assert calls == []
+
+
+def test_project_site_packages_returns_uv_environment(tmp_path):
+    expected = tmp_path / ".venv" / "lib" / "python3.13" / "site-packages"
+    expected.mkdir(parents=True)
+
+    assert paper2_pilot.project_site_packages(tmp_path) == expected

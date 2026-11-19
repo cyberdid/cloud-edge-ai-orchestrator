@@ -38,6 +38,13 @@ def ensure_system_package(package: str) -> None:
     run_checked(["apt-get", "install", "-y", package], timeout=1200)
 
 
+def project_site_packages(repo: Path) -> Path:
+    candidates = sorted((Path(repo) / ".venv" / "lib").glob("python*/site-packages"))
+    if len(candidates) != 1:
+        raise RuntimeError(f"expected one uv site-packages directory, found {len(candidates)}")
+    return candidates[0]
+
+
 def bootstrap() -> dict:
     """Install pinned research dependencies and the local Gemma inference server."""
     if KEY_SOURCE.exists():
@@ -138,6 +145,7 @@ def main() -> None:
     os.environ.update(env)
     os.chdir(REPO)
     sys.path.insert(0, str(REPO))
+    sys.path.insert(0, str(project_site_packages(REPO)))
     from experiments.openevolve.colab.checkpoint import GcsMirror
     from experiments.openevolve.run_pilot import run
 
