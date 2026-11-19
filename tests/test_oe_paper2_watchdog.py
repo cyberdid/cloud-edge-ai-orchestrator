@@ -1,5 +1,6 @@
 import pytest
 
+from experiments.openevolve.colab import paper2_watchdog
 from experiments.openevolve.colab.paper2_watchdog import (
     CONFIG,
     ROOT,
@@ -21,3 +22,15 @@ def test_budget_stops_only_at_or_above_preregistered_cap():
 
 def test_mutable_watchdog_control_state_is_inside_writable_root():
     assert CONFIG.is_relative_to(ROOT)
+
+
+def test_prepare_session_restarts_kernel_after_uploading_pinned_runner(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(paper2_watchdog, "ARCHIVE", tmp_path / "oe.tar.gz")
+    monkeypatch.setattr(paper2_watchdog, "KEY", tmp_path / "sa-key.json")
+    monkeypatch.setattr(paper2_watchdog, "REPO", tmp_path / "repo")
+    monkeypatch.setattr(paper2_watchdog, "_run", lambda args, **kwargs: calls.append(args))
+
+    paper2_watchdog._prepare_session("a" * 40)
+
+    assert calls[-1] == [paper2_watchdog.CLI, "restart-kernel", "-s", paper2_watchdog.SESSION]

@@ -114,6 +114,8 @@ def _prepare_session(commit: str) -> None:
     _run([CLI, "upload", "-s", SESSION, str(KEY), "/content/sa-key.json"], timeout=300)
     _run([CLI, "upload", "-s", SESSION, str(REPO / "experiments/openevolve/colab/paper2_pilot.py"),
           "/content/paper2_pilot.py"], timeout=300)
+    # Clear cached Python modules so a resumed kernel cannot import an earlier Git revision.
+    _run([CLI, "restart-kernel", "-s", SESSION], timeout=300, check=False)
 
 
 def _stop_session() -> None:
