@@ -45,6 +45,38 @@ def project_site_packages(repo: Path) -> Path:
     return candidates[0]
 
 
+def sync_source_archive(repo: Path, archive_path: Path, revision: str) -> None:
+    repo = Path(repo)
+    archive_path = Path(archive_path)
+    if not revision:
+        raise RuntimeError("a source revision is required to prepare the Colab checkout")
+    stamp = repo / ".paper2-source-sha"
+    if stamp.exists() and stamp.read_text().strip() == revision and (repo / "pyproject.toml").exists():
+        return
+    if not archive_path.exists():
+        raise RuntimeError("source archive /content/oe.tar.gz is missing")
+
+    repo.mkdir(parents=True, exist_ok=True)
+    venv = repo / ".venv"
+    backup = repo.parent / f".{repo.name}-venv-preserve"
+    if backup.exists():
+        shutil.rmtree(backup)
+    if venv.exists():
+        os.replace(venv, backup)
+    try:
+        for child in repo.iterdir():
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+        with tarfile.open(archive_path, "r:gz") as bundle:
+            bundle.extractall(repo, filter="data")
+    finally:
+        if backup.exists():
+            os.replace(backup, venv)
+    stamp.write_text(revision)
+
+
 def bootstrap() -> dict:
     """Install pinned research dependencies and the local Gemma inference server."""
     if KEY_SOURCE.exists():
@@ -55,13 +87,8 @@ def bootstrap() -> dict:
         raise RuntimeError("GCS credential is missing; watchdog must upload it before starting")
     KEY.parent.chmod(0o700)
 
-    if not (REPO / "pyproject.toml").exists():
-        archive = Path("/content/oe.tar.gz")
-        if not archive.exists():
-            raise RuntimeError("source archive /content/oe.tar.gz is missing")
-        REPO.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(archive, "r:gz") as bundle:
-            bundle.extractall(REPO, filter="data")
+    sync_source_archive(REPO, Path("/content/oe.tar.gz"),
+                        os.environ.get("PAPER2_GIT_SHA", "unknown"))
 
     try:
         run_checked(["uv", "--version"])
