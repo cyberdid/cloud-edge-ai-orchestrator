@@ -1,5 +1,4 @@
 import pytest
-import subprocess
 
 from experiments.openevolve.colab import paper2_watchdog
 from experiments.openevolve.colab.paper2_watchdog import (
@@ -25,34 +24,23 @@ def test_mutable_watchdog_control_state_is_inside_writable_root():
     assert CONFIG.is_relative_to(ROOT)
 
 
-def test_prepare_session_restarts_kernel_after_uploading_pinned_runner(monkeypatch, tmp_path):
+def test_prepare_session_uploads_source_and_credentials(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(paper2_watchdog, "ARCHIVE", tmp_path / "oe.tar.gz")
     monkeypatch.setattr(paper2_watchdog, "KEY", tmp_path / "sa-key.json")
     monkeypatch.setattr(paper2_watchdog, "REPO", tmp_path / "repo")
-    monkeypatch.setattr(
-        paper2_watchdog,
-        "_run",
-        lambda args, **kwargs: (calls.append(args) or subprocess.CompletedProcess(args, 0, "PAPER2_KERNEL_READY")),
-    )
-    monkeypatch.setattr(paper2_watchdog, "_wait_for_kernel_ready", lambda: calls.append(["kernel-ready"]))
+    monkeypatch.setattr(paper2_watchdog, "_run", lambda args, **kwargs: calls.append(args))
 
     paper2_watchdog._prepare_session("a" * 40)
 
-    assert calls[-2] == [paper2_watchdog.CLI, "restart-kernel", "-s", paper2_watchdog.SESSION]
-    assert calls[-1] == ["kernel-ready"]
+    assert len(calls) == 3
+    assert all(call[1] == "upload" for call in calls)
+    assert calls[-1][-1] == "/content/paper2_pilot.py"
 
 
-def test_wait_for_kernel_ready_requires_success_marker(monkeypatch, tmp_path):
-    commands = []
-    monkeypatch.setattr(paper2_watchdog, "ROOT", tmp_path)
-    monkeypatch.setattr(
-        paper2_watchdog,
-        "_run",
-        lambda args, **kwargs: (commands.append(args) or subprocess.CompletedProcess(args, 0, "PAPER2_KERNEL_READY")),
-    )
-
-    paper2_watchdog._wait_for_kernel_ready()
-
-    assert commands == [[paper2_watchdog.CLI, "exec", "-s", paper2_watchdog.SESSION,
-                         "-f", str(tmp_path / "kernel-ready-probe.py"), "--timeout", "30"]]
+@pytest.mark.parametrize("state, expected", [(None, True), ({"phase": "error"}, True),
+                                             ({"phase": "interrupted"}, True),
+                                             ({"phase": "running"}, False),
+                                             ({"phase": "complete"}, False)])
+def test_error_states_require_fresh_colab_session(state, expected):
+    assert paper2_watchdog._needs_fresh_session(state) is expected

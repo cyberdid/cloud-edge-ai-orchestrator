@@ -114,27 +114,15 @@ def _prepare_session(commit: str) -> None:
     _run([CLI, "upload", "-s", SESSION, str(KEY), "/content/sa-key.json"], timeout=300)
     _run([CLI, "upload", "-s", SESSION, str(REPO / "experiments/openevolve/colab/paper2_pilot.py"),
           "/content/paper2_pilot.py"], timeout=300)
-    # Clear cached Python modules so a resumed kernel cannot import an earlier Git revision.
-    _run([CLI, "restart-kernel", "-s", SESSION], timeout=300, check=False)
-    _wait_for_kernel_ready()
-
-
-def _wait_for_kernel_ready() -> None:
-    probe = ROOT / "kernel-ready-probe.py"
-    probe.write_text('print("PAPER2_KERNEL_READY")\n')
-    deadline = time.monotonic() + 120
-    while time.monotonic() < deadline:
-        result = _run([CLI, "exec", "-s", SESSION, "-f", str(probe), "--timeout", "30"],
-                      timeout=60, check=False)
-        if result.returncode == 0 and "PAPER2_KERNEL_READY" in result.stdout:
-            return
-        time.sleep(5)
-    raise RuntimeError("Colab kernel did not pass the readiness probe within 120 seconds")
 
 
 def _stop_session() -> None:
     if _session_exists():
         _run([CLI, "stop", "-s", SESSION], timeout=600, check=False)
+
+
+def _needs_fresh_session(state: dict | None) -> bool:
+    return state is None or state.get("phase") in {"error", "interrupted"}
 
 
 def _budget_monitor(start_balance: float, cap: float, stop_event: threading.Event,
@@ -184,6 +172,8 @@ def main() -> None:
         return
 
     _ensure_repo(commit)
+    if _needs_fresh_session(state):
+        _stop_session()
     _ensure_session()
     _prepare_session(commit)
 
@@ -221,6 +211,11 @@ def main() -> None:
         if state and state.get("phase") == "complete":
             _stop_session()
             return
+        if _needs_fresh_session(state):
+            _stop_session()
+            _ensure_session()
+            _prepare_session(commit)
+            continue
         if result.returncode == 0:
             raise RuntimeError("Colab runner returned without a complete GCS state")
 
@@ -230,11 +225,9 @@ def main() -> None:
         if time.time() - updated < 180:
             time.sleep(180)
             continue
-        if _session_exists():
-            _run([CLI, "restart-kernel", "-s", SESSION], timeout=300, check=False)
-        else:
-            _ensure_session()
-            _prepare_session(commit)
+        _stop_session()
+        _ensure_session()
+        _prepare_session(commit)
 
 
 if __name__ == "__main__":
