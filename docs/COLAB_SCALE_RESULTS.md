@@ -18,7 +18,7 @@
   - The MoE is much closer to the 31B than to the E4B.
   - A 100-call MoE run cost about 0.9 compute units, against about 3.9 for a 31B run, so the MoE is the best choice per compute unit.
   - Arm L beat arm B for E4B, 12B and the MoE, but not for 31B: B reached 2.40 against 2.25 for L.
-- **RQ-cloud (MoE).** With about 10% of mutations from Argon (LC), the selected verified score was higher in 7 of 9 circle-packing pairs and in all 9 kNN pairs. Median circle packing was 2.63 against 2.19; the record is 2.635. Full analysis: [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026-11-08.md).
+- **RQ-cloud (MoE).** With about 10% of mutations from Argon (LC), the selected verified score was higher in 7 of 9 circle-packing pairs (median 2.63 against 2.19; the record is 2.635). On kNN the 2026-11-08 analysis found LC higher in all 9 pairs; under this report's serial re-timing it is higher in 8 of 9, since the seed-909 LC program (0.159) is slower than the seed (0.223). Full analysis: [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026-11-08.md).
 - **RQ-budget (MoE circle packing, 1,000 calls).**
   - Longer search found better valid packings, 2.20–2.43 against a median of 2.17 at 100 calls.
   - But selection got worse. 57% of above-seed candidates were false improvements, and two of three runs shipped an invalid program.
@@ -87,7 +87,7 @@ Against the expectations stated in advance:
 The paired analysis is in [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026-11-08.md) and is not repeated here. In brief, over 9 complete pairs per task (seeds 101–909):
 
 - **Circle packing:** LC median 2.630 against L 2.192. LC was higher in 7 pairs, tied in 1 and lower in 1.
-- **kNN:** LC median 0.826 against L 0.022, which is the seed's score. LC was higher in all 9 pairs.
+- **kNN (2026-11-08 timing):** LC median 0.826 against L 0.022, which is the seed's score there. LC was higher in all 9 pairs. The serial re-timing in this report gives LC 1.000 against 0.223 and 8 of 9 pairs (see the kNN section).
 - **Cost:** the 18 complete LC runs made 198 Argon calls with 4.64 M tokens.
 - **False improvements on circle packing** were about as frequent as in L (29% vs 30%), so Argon raised scores without making the working evaluator more reliable.
 
@@ -136,7 +136,7 @@ Primary endpoint from the serial re-timing (deviation 7). The seed program score
 | MoE | L, 500 calls | 3 | 0.223 (seed in every run) | 3 | 0 | 0 / 0 |
 
 - **Without Argon, kNN barely moved.** Across 63 Gemma-only runs the working evaluator rarely ranked any candidate above the seed (18 such candidates in total). Only six runs shipped a program that beat the seed, mostly for the smaller models, and the MoE never did. The pre-registered expectations "L > B" and "score rises with size" are not supported on kNN; the arms and models are indistinguishable at this budget.
-- **With Argon, it did.** Every LC run shipped a program other than the seed, and 8 of 9 beat it, 5 of them at the score ceiling of 1.0 (at least twice as fast as exact search at full recall). The LC analysis of 2026-11-08 reports a median of 0.826 for the same runs; that re-check ran at a different time, and both show LC above L in all nine pairs.
+- **With Argon, it did.** Every LC run shipped a program other than the seed, and 8 of 9 beat it, 5 of them at the score ceiling of 1.0 (at least twice as fast as exact search at full recall). The LC analysis of 2026-11-08 reports a median of 0.826 for the same runs and LC above L in all nine pairs; that re-check ran at a different time and load. Under the serial re-timing LC is above L in 8 of 9 pairs: the seed-909 LC program is valid but slower than the seed (0.159 against 0.223).
 - **False improvements on kNN** are reported here as invalid above-seed candidates only, which do not depend on timing: 6 of 9 for 12B L and 4 of 213 for LC, none elsewhere. Whether a valid above-seed candidate was really faster than the seed depends on timing and would need the same serial re-timing for every such candidate. That was not done.
 - **Measurement note.** Repeated serial timings of the same program differed by a median of 0.05 in score. They differed most (up to 0.49) for programs close to the 2x speed ceiling, where one slow repetition drops the score sharply.
 
