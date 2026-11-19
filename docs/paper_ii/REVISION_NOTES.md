@@ -14,6 +14,7 @@
 - Reconciled final planned and completed counts from `docs/colab_scale/FINAL_RUNS_2026-11-11.json`: 179 planned, 167 completed, 10 not started, 2 quota-paused partial. The 18 completed LC runs form nine matched pairs per task; 10 added L runs are unpaired and excluded from those comparisons.
 - Clarified the laptop pilot: 18 runs were registered; all 12 L/B runs completed; the separate six-run LC condition was excluded after quota exhaustion, with one partial LC run.
 - Added a machine-checked inventory assertion to `scripts/paper_ii/revision_metrics.py` so an unnoticed change to the inventory fails the rebuild.
+- Disambiguated the two uses of the number 179: the Colab plan independently had 179 slots (167 complete, 12 partial or unstarted), while the `runs` array in `exploratory_tests_2026-11-19.json` contains 179 analyzed records because it combines those 167 Colab runs with the 12 completed laptop L/B runs. The manuscript's Colab completion denominator comes only from `FINAL_RUNS_2026-11-11.json`.
 
 ### 2. Selection regret and false-improvement interpretation
 
