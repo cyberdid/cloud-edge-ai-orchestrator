@@ -76,6 +76,36 @@ def test_cloud_share_by_arm():
     assert run_pilot.CLOUD_SHARE == {"L": 0.0, "LC": 0.1, "B": 0.0}
 
 
+def test_evaluator_version_selects_knn_v2_only():
+    assert run_pilot.evaluator_path("knn", "v1") == run_pilot.TASKS["knn"]["evaluator"]
+    assert run_pilot.evaluator_path("knn", "v2").name == "working_evaluator_v2.py"
+    with pytest.raises(ValueError, match="only available for knn"):
+        run_pilot.evaluator_path("circle_packing", "v2")
+
+
+def test_evaluator_version_rejects_unknown_values():
+    with pytest.raises(ValueError, match="evaluator version"):
+        run_pilot.evaluator_path("knn", "v3")
+
+
+def test_git_sha_can_be_pinned_for_archived_colab_source(monkeypatch):
+    monkeypatch.setenv("OE_PILOT_GIT_SHA", "0123456789abcdef")
+    assert run_pilot._git_sha() == "0123456789abcdef"
+
+
+def test_resume_rejects_a_different_evaluator_version(tmp_path, monkeypatch):
+    out = tmp_path / "run"
+    out.mkdir()
+    (out / "manifest.json").write_text('{"evaluator_version":"v1"}')
+    (out / "calls.jsonl").write_text("")
+    monkeypatch.setenv("OE_PILOT_MAX_ITER", "0")
+    stub = lambda messages: (run_pilot.stub_reply("knn"), 1, 1)  # noqa: E731
+
+    with pytest.raises(RuntimeError, match="cannot resume with evaluator v2"):
+        run_pilot.run("knn", "L", 101, out, resume=True, llm="stub", backends=(stub, stub),
+                      evaluator_version="v2")
+
+
 @real_docker
 def test_quota_pause_then_resume_completes_budget(tmp_path, monkeypatch):
     from experiments.openevolve.router import choose_model

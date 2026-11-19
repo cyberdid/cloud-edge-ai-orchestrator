@@ -1,0 +1,17 @@
+{
+  "protocol_id": "evaluator-v2-pilot-2026-11-19",
+  "model": "gemma4:12b",
+  "task": "knn",
+  "arm": "L",
+  "seed": 20261119,
+  "evaluator_order": ["v1", "v2"],
+  "calls_per_condition": 20,
+  "num_ctx": 16384,
+  "num_predict": 2048,
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "max_compute_units": 15,
+  "checkpoint_seconds": 30,
+  "gcs_bucket": "oe-colab-scale-0903767759",
+  "gcs_prefix": "paper2-v2/b1"
+}

@@ -1,0 +1,23 @@
+[Unit]
+Description=Paper II evaluator V1/V2 Colab study supervisor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=PATH=/opt/oe-watchdog/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/etc/paper2-colab-watchdog.env
+ExecStart=/opt/oe-watchdog/bin/python /opt/paper2/repo/experiments/openevolve/colab/paper2_watchdog.py
+Restart=on-failure
+RestartSec=60
+TimeoutStartSec=infinity
+TimeoutStopSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/paper2 /root/.config/colab-cli /root/.oe /tmp
+
+[Install]
+WantedBy=multi-user.target

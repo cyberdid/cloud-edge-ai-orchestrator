@@ -33,6 +33,18 @@ GEMMA_MODEL = "gemma4:12b"  # the pilot's model; OE_PILOT_GEMMA_MODEL selects an
 
 def gemma_model() -> str:
     return os.environ.get("OE_PILOT_GEMMA_MODEL", GEMMA_MODEL)
+
+
+def evaluator_path(task: str, version: str = "v1") -> Path:
+    if version not in {"v1", "v2"}:
+        raise ValueError(f"unknown evaluator version: {version}")
+    if task not in TASKS:
+        raise ValueError(f"unknown task: {task}")
+    if version == "v2":
+        if task != "knn":
+            raise ValueError("evaluator v2 is only available for knn")
+        return TASKS[task]["evaluator"].with_name("working_evaluator_v2.py")
+    return TASKS[task]["evaluator"]
 STUB_DIFFS = {
     "circle_packing": ("    n = 26\n", "    n = 26  # stub\n"),
     "knn": ('    """Baseline: exact search (recall 1.0, no speed-up)."""\n',
@@ -74,11 +86,33 @@ def _serve_in_process(router: Router):
 
 
 def _git_sha() -> str:
-    return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    return os.environ.get("OE_PILOT_GIT_SHA") or subprocess.run(
+        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
+    ).stdout.strip()
+
+
+def _call_checkpoint_callback():
+    """Lazily build the GCS client after the router process forks, if configured."""
+    bucket = os.environ.get("OE_PILOT_GCS_BUCKET")
+    prefix = os.environ.get("OE_PILOT_GCS_PREFIX")
+    root = os.environ.get("OE_PILOT_GCS_ROOT")
+    credentials = os.environ.get("OE_PILOT_GCS_CREDENTIALS")
+    if not (bucket and prefix and root and credentials):
+        return None
+    holder = {"mirror": None}
+
+    def sync_call_log() -> None:
+        if holder["mirror"] is None:
+            from experiments.openevolve.colab.checkpoint import GcsMirror
+
+            holder["mirror"] = GcsMirror(bucket, prefix, Path(root), credentials_path=Path(credentials))
+        holder["mirror"].sync()
+
+    return sync_call_log
 
 
 def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "real",
-        backends: tuple | None = None) -> dict:
+        backends: tuple | None = None, evaluator_version: str = "v1") -> dict:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     calls_path, manifest_path = out / "calls.jsonl", out / "manifest.json"
@@ -87,6 +121,7 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
     max_iter = int(os.environ.get("OE_PILOT_MAX_ITER", "100"))
     num_predict = int(os.environ.get("OE_PILOT_NUM_PREDICT", "2048"))
     spec = TASKS[task]
+    selected_evaluator = evaluator_path(task, evaluator_version)
     if backends:
         gemma, argon = backends
     elif llm == "stub":
@@ -96,9 +131,15 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
                              model=gemma_model(), num_predict=num_predict)
         argon = agy_argon()
     router = Router(seed, CLOUD_SHARE[arm], calls_path, gemma=gemma, argon=argon,
-                    start_index=len(_lines(calls_path)), budget=max_iter)
+                    start_index=len(_lines(calls_path)), budget=max_iter,
+                    on_call_logged=_call_checkpoint_callback())
     os.environ[ENV_VAR] = str(out / "candidates.jsonl")
     manifest = json.loads(manifest_path.read_text()) if resume and manifest_path.exists() else {}
+    if resume and manifest.get("evaluator_version", evaluator_version) != evaluator_version:
+        raise RuntimeError(
+            f"cannot resume with evaluator {evaluator_version}; existing run used "
+            f"{manifest.get('evaluator_version')}"
+        )
     pause_path = out / PAUSE_FILE
     if pause_path.exists():  # resuming after a quota pause: keep the event, clear the flag
         manifest["quota_pauses"] = manifest.get("quota_pauses", []) + [json.loads(pause_path.read_text())]
@@ -108,6 +149,10 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
         "git_sha": _git_sha(), "openevolve_version": importlib.metadata.version("openevolve"),
         "config_sha256": hashlib.sha256(spec["config"].read_bytes()).hexdigest(),
         "models": {"gemma": gemma_model(), "argon": ARGON_MODEL}, "num_predict": num_predict, "llm": llm,
+        "evaluator_version": evaluator_version,
+        "model_digest": os.environ.get("OE_PILOT_MODEL_DIGEST"),
+        "protocol_id": os.environ.get("OE_PILOT_PROTOCOL_ID"),
+        "protocol_sha256": os.environ.get("OE_PILOT_PROTOCOL_SHA256"),
         "status": "running", "starts": manifest.get("starts", []) + [time.time()],
     })
     manifest_path.write_text(json.dumps(manifest, indent=2))
@@ -127,7 +172,7 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
             # after a quota pause or a kill made no (or already-logged) calls.
             remaining = max_iter - router.call_index
             if remaining > 0:
-                controller = OpenEvolve(str(spec["initial"]), str(spec["evaluator"]), config,
+                controller = OpenEvolve(str(spec["initial"]), str(selected_evaluator), config,
                                         output_dir=str(out / "openevolve"))
                 asyncio.run(controller.run(iterations=remaining, checkpoint_path=checkpoint))
         finally:
@@ -152,8 +197,10 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--llm", choices=("real", "stub"), default="real")
+    parser.add_argument("--evaluator-version", choices=("v1", "v2"), default="v1")
     args = parser.parse_args()
-    manifest = run(args.task, args.arm, args.seed, args.out, args.resume, args.llm)
+    manifest = run(args.task, args.arm, args.seed, args.out, args.resume, args.llm,
+                   evaluator_version=args.evaluator_version)
     print(json.dumps({k: manifest[k] for k in ("task", "arm", "seed", "status")}))
     raise SystemExit(3 if manifest["status"] == "paused_quota" else 0)
 

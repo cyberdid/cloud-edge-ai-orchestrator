@@ -35,11 +35,13 @@ def choose_model(seed: int, call_index: int, cloud_share: float) -> Literal["gem
 
 class Router:
     def __init__(self, seed: int, cloud_share: float, log_path: Path, *,
-                 gemma: Backend, argon: Backend, start_index: int = 0, budget: int | None = None) -> None:
+                 gemma: Backend, argon: Backend, start_index: int = 0, budget: int | None = None,
+                 on_call_logged: Callable[[], None] | None = None) -> None:
         self.seed, self.cloud_share, self.budget = seed, cloud_share, budget
         self.log_path = Path(log_path)
         self.backends = {"gemma": gemma, "argon": argon}
         self.call_index = start_index
+        self.on_call_logged = on_call_logged
         self.paused = False
         self.lock = threading.Lock()
         self.last_usage = (0, 0)
@@ -76,6 +78,8 @@ class Router:
             }
             with self.log_path.open("a") as handle:
                 handle.write(json.dumps(record) + "\n")
+            if self.on_call_logged is not None:
+                self.on_call_logged()
             return text
 
 

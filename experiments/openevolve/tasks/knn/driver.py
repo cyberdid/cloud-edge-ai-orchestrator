@@ -49,6 +49,28 @@ else:
             except Exception as exc:
                 rows.append({"error": type(exc).__name__ + ": " + str(exc)[:200]})
         result["sets"] = rows
+    elif mode == "working_v2_preflight":
+        rows = []
+        for x, qs, k, _ in sets:
+            try:
+                rows.append(_rows(candidate.approximate_knn(x, qs, k)))
+            except Exception as exc:
+                rows.append({"error": type(exc).__name__ + ": " + str(exc)[:200]})
+        result["sets"] = rows
+    elif mode == "working_v2_timed":
+        rows = []
+        for x, qs, k, _ in sets:
+            try:
+                ref_t, (ref_ids, _) = min((_timed(brute_knn, x, qs, k) for _ in range(3)), key=lambda r: r[0])
+                runs = []
+                for _ in range(3):
+                    elapsed, out = _timed(candidate.approximate_knn, x, qs, k)
+                    ids, dists = _rows(out)
+                    runs.append({"time": elapsed, "ids": ids, "dists": dists})
+                rows.append({"reference_time": ref_t, "reference_ids": ref_ids.tolist(), "runs": runs})
+            except Exception as exc:
+                rows.append({"error": type(exc).__name__ + ": " + str(exc)[:200]})
+        result["sets"] = rows
     elif mode == "recheck":
         out_fresh, out_sets = [], []
         for x, qs, k, _ in fresh:

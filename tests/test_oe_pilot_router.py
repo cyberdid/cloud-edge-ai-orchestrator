@@ -57,6 +57,17 @@ def test_log_record_fields(tmp_path):
     assert record["latency_s"] >= 0 and record["ts_start"] > 0
 
 
+def test_after_call_callback_runs_after_durable_local_log(tmp_path):
+    path = tmp_path / "calls.jsonl"
+    observations = []
+    router = Router(7, 0.0, path, gemma=fake(), argon=boom,
+                    on_call_logged=lambda: observations.append(read_log(path)[-1]["call_index"]))
+
+    router.complete([{"role": "user", "content": "hi"}])
+
+    assert observations == [0]
+
+
 def test_empty_reply_status(tmp_path):
     router = Router(7, 0.0, tmp_path / "calls.jsonl", gemma=fake(""), argon=boom)
     router.complete([{"role": "user", "content": "hi"}])
