@@ -91,22 +91,10 @@ def run_coroutine_synchronously(coroutine):
         asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coroutine)
+    import nest_asyncio
 
-    result = []
-    error = []
-
-    def run_in_thread():
-        try:
-            result.append(asyncio.run(coroutine))
-        except BaseException as exc:
-            error.append(exc)
-
-    worker = threading.Thread(target=run_in_thread)
-    worker.start()
-    worker.join()
-    if error:
-        raise error[0]
-    return result[0] if result else None
+    nest_asyncio.apply()
+    return asyncio.run(coroutine)
 
 
 def _git_sha() -> str:

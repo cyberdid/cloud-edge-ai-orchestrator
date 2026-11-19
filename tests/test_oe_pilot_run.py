@@ -2,6 +2,7 @@
 import json
 import os
 import asyncio
+import threading
 
 import pytest
 
@@ -80,11 +81,13 @@ def test_cloud_share_by_arm():
 def test_coroutine_runner_supports_an_existing_event_loop():
     async def scenario():
         async def answer():
-            return 42
+            return 42, threading.get_ident()
 
-        return run_pilot.run_coroutine_synchronously(answer())
+        caller_thread = threading.get_ident()
+        value, worker_thread = run_pilot.run_coroutine_synchronously(answer())
+        return value, worker_thread == caller_thread
 
-    assert asyncio.run(scenario()) == 42
+    assert asyncio.run(scenario()) == (42, True)
 
 
 def test_evaluator_version_selects_knn_v2_only():
