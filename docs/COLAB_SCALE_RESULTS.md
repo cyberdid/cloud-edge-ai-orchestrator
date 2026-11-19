@@ -1,4 +1,4 @@
-# Colab scale study: MoE comes close to 31B on circle packing at a quarter of the cost; only Argon moved kNN
+# Colab scale study: MoE approaches 31B circle-packing scores at about 24% of its cost; LC pairs improve kNN in 8/9 runs
 
 **Snapshot:** 2026-11-19 (Europe/Kyiv)
 **Study:** OpenEvolve with Gemma 4 E4B, 12B, 26B A4B (MoE) and 31B on Colab L4, pre-registered at tag `colab-scale-prereg` ([PREREGISTRATION.md](colab_scale/PREREGISTRATION.md))
@@ -16,16 +16,16 @@
   | 31B | 2.25 (5 seeds) |
 
   - The MoE is much closer to the 31B than to the E4B.
-  - A 100-call MoE run cost about 0.9 compute units, against about 3.9 for a 31B run, so the MoE is the best choice per compute unit.
+  - A 100-call MoE run cost about 0.9 compute units, against about 3.9 for a 31B run. E4B used slightly fewer units per median score point (0.40 vs 0.43), while the MoE had a higher absolute median score.
   - Arm L beat arm B for E4B, 12B and the MoE, but not for 31B: B reached 2.40 against 2.25 for L.
-- **RQ-cloud (MoE).** With about 10% of mutations from Argon (LC), the selected verified score was higher in 7 of 9 circle-packing pairs (median 2.63 against 2.19; the record is 2.635). On kNN the 2026-11-08 analysis found LC higher in all 9 pairs; under this report's serial re-timing it is higher in 8 of 9, since the seed-909 LC program (0.159) is slower than the seed (0.223). Full analysis: [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026-11-08.md).
+- **RQ-cloud (MoE).** With about 10% of mutations from Argon (LC), the selected verified score was higher in 7 of 9 circle-packing pairs (median 2.63 against 2.19; the record is 2.635). On kNN the 2026-11-08 analysis found LC higher in all 9 pairs; under the serial re-timing it is higher in 8 of 9, since the seed-909 LC program (0.159) is slower than the seed (0.223). The later paired tests are exploratory and were not pre-registered. Full analysis: [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026-11-08.md).
 - **RQ-budget (MoE circle packing, 1,000 calls).**
   - Longer search found better valid packings, 2.20–2.43 against a median of 2.17 at 100 calls.
-  - But selection got worse. 57% of above-seed candidates were false improvements, and two of three runs shipped an invalid program.
+  - But selection got worse. 57% of above-seed candidate evaluations were false improvements, and two of three runs shipped an invalid program.
   - The 1,000-call best-of-N control shipped 1.92–2.07.
 - **RQ-hardware (12B).** The Colab and laptop 12B results differ, but the two used different model builds, so hardware alone cannot be compared. On Colab, the 12B best-of-N arm never produced a usable circle-packing candidate because that build misquotes one line of the seed.
 - **False improvements appear for every model**, as expected. They are most frequent for E4B (47–52% of above-seed candidates) and in the long runs.
-- **kNN.** Without Argon, no model improved kNN reliably. The seed program was shipped in 54 of 63 Gemma-only runs, and only 6 shipped a program that beat it. The 500-call MoE runs never produced a candidate the working evaluator ranked above the seed. With Argon, 8 of 9 MoE LC runs shipped a valid, faster program; the median score was 1.0 against 0.22 for the seed. kNN scores come from a serial re-timing of the seed and shipped programs (deviation 7).
+- **kNN.** Without Argon, no model improved kNN reliably. The seed program was shipped in 54 of 63 Gemma-only runs, and only 6 shipped a program that beat it. The 500-call MoE runs never produced a candidate the working evaluator ranked above the seed. In the LC arm, 8 of 9 runs shipped a valid, faster program; the median score was 1.0 against 0.223 for the seed. Still, 28% of the LC candidate evaluations ranked above the seed were not better on serial re-check. kNN scores come from serial re-timing (deviation 7).
 
 ## Runs and deviations
 
@@ -45,7 +45,8 @@ MoE L has 15 runs per task. Seeds 101–1010 belong to the pre-registered size l
 4. **Spending cap.** It was raised from 330 to 380 units on 2026-11-02, and 363.21 units were spent in all.
 5. **LC.** The extension planned 30 LC runs, and the study stopped at 18 complete ones (2026-11-08). The remaining Gemma-only runs finished on 2026-11-11.
 6. **VM interruptions and watchdog restarts** occurred as expected. Runs resumed from logged calls and checkpoints, and none was restarted from scratch.
-7. **kNN re-timing** (2026-11-19). The first kNN re-check ran up to 16 sandboxes at once. Under that load the identical seed program scored anywhere from 0.02 to 1.0, because the score includes a wall-clock speed penalty. The kNN primary endpoint is therefore computed from a serial re-check of the seed (5 repetitions) and of each of the 18 distinct shipped programs (3 repetitions each), one sandbox at a time on an otherwise idle laptop, with the registered `recheck_knn`; the median per program is used. Validity verdicts, which do not depend on timing, come from the full re-check and agree with the serial runs.
+7. **kNN re-timing of the endpoint** (2026-11-19). The first kNN re-check ran up to 16 sandboxes at once. Under that load the identical seed program scored anywhere from 0.02 to 1.0, because the score includes a wall-clock speed penalty. The serial timing files contain eight observations for the seed code hash: five designated calibration repetitions and three more when that same code was selected as a shipped program. The main analysis uses the median across all eight (0.2235; range 0.161–0.244); using only the five designated calibration repetitions gives 0.238 (range 0.192–0.244). The 18 distinct shipped program hashes each have three serial observations; the seed hash is one of those 18. Validity verdicts, which do not depend on timing, come from the full re-check and agree with the serial runs.
+8. **kNN re-timing of above-seed candidates** (2026-11-19). Across the Colab study, 231 above-seed candidate evaluations included 10 invalid programs and 221 valid evaluations representing 214 distinct code hashes; all 214 valid hashes were serially timed. The pilot adds 14 further distinct valid hashes, for 228 distinct valid programs across both studies. Each non-seed hash was timed one to three times: three for programs scoring 0.15–0.30 (the band around the seed's 0.223 median), one otherwise. The seed hash has eight total observations as described above. About 1,900 candidates below the seed's working score were never re-checked, so the all-candidate best-verified kNN endpoint is not reported. The published kNN false-improvement denominator counts candidate evaluations, not distinct hashes.
 
 The independent re-checks ran on the laptop in the pilot's Docker sandbox (`sha256:aae97353…7ae2`) with the re-check code at the pilot's registration tag. As in the pilot, the circle-packing re-check reports the raw sum of radii; the ratio to 2.635 is the sum divided by 2.635.
 
@@ -78,8 +79,8 @@ Primary endpoint: the re-check score of the working-best candidate, or the seed'
 Against the expectations stated in advance:
 
 - **"Verified score rises with model size"** holds broadly. E4B and 12B are at about the same level, and the MoE and 31B are about 0.5–0.6 higher.
-- **"The MoE lands between 12B and 31B and is the best per compute unit"** holds. Its median is 0.08 below 31B at about a quarter of the units per run. E4B is equally cheap per point, but at a far lower level.
-- **"L > B for every model"** holds for E4B and the MoE, and formally for 12B, though that B arm failed for a build-specific reason. It does not hold for 31B, where B reached 2.40 against 2.25, with 5 seeds per arm.
+- **"The MoE lands between 12B and 31B"** holds descriptively: its median is 0.08 below 31B at about a quarter of the units per run. E4B is slightly cheaper per median score point, but at a lower absolute score.
+- **"L > B for every model"** holds for the observed medians in E4B, 12B and the MoE; the 12B B arm produced no candidate because of a build-specific patch-application failure. It does not hold for 31B, where B reached 2.40 against 2.25, with 5 seeds per arm.
 - **"False improvements present for every model"** holds.
 
 ## RQ-cloud: Argon assistance (MoE)
@@ -89,7 +90,7 @@ The paired analysis is in [LC_RESULTS_2026-11-08.md](colab_scale/LC_RESULTS_2026
 - **Circle packing:** LC median 2.630 against L 2.192. LC was higher in 7 pairs, tied in 1 and lower in 1.
 - **kNN (2026-11-08 timing):** LC median 0.826 against L 0.022, which is the seed's score there. LC was higher in all 9 pairs. The serial re-timing in this report gives LC 1.000 against 0.223 and 8 of 9 pairs (see the kNN section).
 - **Cost:** the 18 complete LC runs made 198 Argon calls with 4.64 M tokens.
-- **False improvements on circle packing** were about as frequent as in L (29% vs 30%), so Argon raised scores without making the working evaluator more reliable.
+- **False improvements on circle packing** were about as frequent in the pooled data (29% vs 30%). The paired exploratory comparison is inconclusive: median LC-minus-L run-rate difference −0.05, 95% bootstrap interval [−0.11, 0.22]; this does not establish that the rates are equal or that assistance had no effect.
 
 The circle-packing re-check in this report reproduces the LC false-improvement count of that analysis exactly (140 / 486).
 
@@ -122,26 +123,48 @@ The circle-packing re-check in this report reproduces the LC false-improvement c
 
 ## kNN (all research questions)
 
-Primary endpoint from the serial re-timing (deviation 7). The seed program scores 0.223 (five repetitions, 0.192–0.244). Seeds 101–1010 for E4B, 12B and MoE L; 101–909 for MoE LC. 31B has no kNN runs.
+Primary endpoint from the serial re-timing (deviation 7). The seed code hash has eight serial observations (five designated calibration and three selected-shipped repeats); the pooled median is 0.223 (range 0.161–0.244). The five designated calibration observations alone have median 0.238 (range 0.192–0.244). Seeds 101–1010 for E4B, 12B and MoE L; 101–909 for MoE LC. 31B has no kNN runs.
 
-| model | arm | runs | shipped verified, median [range] | runs shipping the seed | shipped program beats seed | invalid / above-seed candidates |
+| model | arm | runs | shipped verified, median [range] | runs shipping the seed | shipped program beats seed | false / above-seed evaluations |
 |---|---|---:|---:|---:|---:|---:|
-| E4B | L | 10 | 0.223 [0.210, 1.000] | 8 | 1 | 0 / 2 |
+| E4B | L | 10 | 0.223 [0.210, 1.000] | 8 | 1 | 1 / 2 |
 | E4B | B | 10 | 0.223 [0.223, 0.241] | 9 | 1 | 0 / 1 |
 | 12B | L | 10 | 0.223 [0.223, 0.483] | 9 | 1 | 6 / 9 |
-| 12B | B | 10 | 0.223 [0.074, 1.000] | 6 | 3 | 0 / 5 |
-| MoE | L | 10 | 0.223 [0.223, 0.223] | 9 | 0 | 0 / 1 |
+| 12B | B | 10 | 0.223 [0.074, 1.000] | 6 | 3 | 1 / 5 |
+| MoE | L | 10 | 0.223 [0.223, 0.223] | 9 | 0 | 1 / 1 |
 | MoE | B | 10 | 0.223 (seed in every run) | 10 | 0 | 0 / 0 |
-| MoE | LC | 9 | **1.000** [0.159, 1.000] | 0 | 8 | 4 / 213 |
+| MoE | LC | 9 | **1.000** [0.159, 1.000] | 0 | 8 | 60 / 213 (28%) |
 | MoE | L, 500 calls | 3 | 0.223 (seed in every run) | 3 | 0 | 0 / 0 |
 
-- **Without Argon, kNN barely moved.** Across 63 Gemma-only runs the working evaluator rarely ranked any candidate above the seed (18 such candidates in total). Only six runs shipped a program that beat the seed, mostly for the smaller models, and the MoE never did. The pre-registered expectations "L > B" and "score rises with size" are not supported on kNN; the arms and models are indistinguishable at this budget.
+- **Without Argon, kNN barely moved.** Across 63 Gemma-only runs the working evaluator rarely ranked any candidate above the seed (18 such candidate evaluations in total). Six runs shipped a program that beat the seed, mostly for the smaller models, and the MoE never did. The registered descriptive results do not support the expected L-over-B or size trend on kNN; the exploratory tests detect no reliable L-vs-B differences, which is not evidence of equivalence.
 - **With Argon, it did.** Every LC run shipped a program other than the seed, and 8 of 9 beat it, 5 of them at the score ceiling of 1.0 (at least twice as fast as exact search at full recall). The LC analysis of 2026-11-08 reports a median of 0.826 for the same runs and LC above L in all nine pairs; that re-check ran at a different time and load. Under the serial re-timing LC is above L in 8 of 9 pairs: the seed-909 LC program is valid but slower than the seed (0.159 against 0.223).
-- **False improvements on kNN** are reported here as invalid above-seed candidates only, which do not depend on timing: 6 of 9 for 12B L and 4 of 213 for LC, none elsewhere. Whether a valid above-seed candidate was really faster than the seed depends on timing and would need the same serial re-timing for every such candidate. That was not done.
-- **Measurement note.** Repeated serial timings of the same program differed by a median of 0.05 in score. They differed most (up to 0.49) for programs close to the 2x speed ceiling, where one slow repetition drops the score sharply.
+- **False improvements on kNN** use the same serial re-timing for every valid above-seed code hash (214 in Colab; 228 across both studies, deviation 8). For LC, 60 of 213 above-seed candidate evaluations were false: 4 invalid and 56 valid but not faster than the pooled seed score. The 2026-11-08 analysis counted 4/213 using a seed score measured under parallel load (0.022); the serial pass supersedes that timing-sensitive comparison. Gemma-only runs produced too few above-seed candidate evaluations (18 in 63 runs) for a stable rate estimate.
+- **Measurement note.** Among 71 code hashes with repeated serial timings, the median within-program score range was 0.018; 16 had a range above 0.05. The largest range was 0.490, for one program whose repeated scores were 0.510, 1.000 and 1.000. This residual timing variation matters near the 1.0 speed ceiling.
+
+## Exploratory statistics (not pre-registered)
+
+Both pre-registrations specify descriptive reporting only. The tests below were added after the results were known and should be read as exploratory. Script: [`scripts/analysis/oe_exploratory_tests.py`](../scripts/analysis/oe_exploratory_tests.py); output: [`colab_scale/results/exploratory_tests_2026-11-19.json`](colab_scale/results/exploratory_tests_2026-11-19.json). Endpoints are the registered shipped verified scores (kNN from the serial re-timing). Bootstrap intervals use 10,000 resamples of the paired differences. Paired p-values are unadjusted and exploratory; the size-ladder pairwise tests and nine L-vs-B tests use Holm adjustments as shown.
+
+| comparison | n | result | test, two-sided |
+|---|---:|---|---|
+| MoE LC vs L, circle packing | 9 pairs | 7 better / 1 equal / 1 worse; median Δ +0.40, 95% CI [0, 0.57] | sign p = 0.070; Wilcoxon p = 0.15 |
+| MoE LC vs L, kNN | 9 pairs | 8 / 0 / 1; median Δ +0.78, 95% CI [0.19, 0.78] | sign p = 0.039; Wilcoxon p = 0.0078 |
+| circle packing L across E4B, 12B, MoE, 31B | 10/10/10/5 | medians 1.63 / 1.63 / 2.17 / 2.25 | Kruskal–Wallis p = 0.015 |
+| MoE vs 31B, circle L | 10 vs 5 | 2.17 vs 2.25 | Mann–Whitney p = 0.426 (Holm 1.000) |
+| MoE vs 12B / vs E4B, circle L | 10 vs 10 | 2.17 vs 1.63 / 1.63 | Mann–Whitney p = 0.087 / 0.021 (Holm 0.173 / 0.063) |
+| L vs B, circle, per model | 10 vs 10 (31B 5, pilot 3) | 12B p = 0.002 (Holm 0.020), MoE p = 0.037 (Holm 0.30); E4B, 31B, pilot not significant | Mann–Whitney, Holm over 9 tests |
+| L vs B, kNN, per model | 10 vs 10 | identical or near-identical (mostly the seed) | not significant |
+| false-improvement rate per run, MoE LC vs L, circle | 9 pairs | median Δ −0.05, 95% CI [−0.11, 0.22] | sign p = 0.508; Wilcoxon p = 0.910 |
+
+- **The largest observed paired LC-vs-L separation is on kNN.** LC scored higher in 8 of 9 pairs under serial re-timing; these post-hoc tests are exploratory and do not establish a general causal effect.
+- **Circle-packing outcomes differ across the four model groups overall** (Kruskal–Wallis p = 0.015, unadjusted). The three pairwise MoE comparisons do not pass Holm correction; the MoE-vs-31B test does not establish equivalence.
+- **The only L-vs-B difference that survives the Holm correction is 12B on circle packing.** This separation coincides with a known build-specific patch-application failure in B (no candidate was produced; deviation 2), so it does not estimate a general algorithmic L-vs-B effect.
+- **The circle-packing false-improvement comparison is inconclusive.** Its paired interval spans both a decrease and an increase in per-run rates, so the data do not establish either a reduction or no effect.
 
 ## Data
 
 - Run list and status: [FINAL_RUNS_2026-11-11.json](colab_scale/FINAL_RUNS_2026-11-11.json).
 - LC analysis tables: [colab_scale/results/](colab_scale/results/).
+- Serial kNN re-checks: [`knn_serial_retiming_2026-11-19.jsonl`](colab_scale/results/knn_serial_retiming_2026-11-19.jsonl) and [`knn_serial_above_seed_2026-11-19.jsonl`](colab_scale/results/knn_serial_above_seed_2026-11-19.jsonl). Run-level exploratory results and the calibration sensitivity are in [`exploratory_tests_2026-11-19.json`](colab_scale/results/exploratory_tests_2026-11-19.json).
+- Re-run the analysis when the original run folders are available locally: `PYTHONPATH=/path/to/orchestrator python scripts/analysis/oe_exploratory_tests.py /path/to/colab/runs /path/to/pilot/runs docs/colab_scale/results /tmp/exploratory-results.json`. The serial inputs in `docs/colab_scale/results/` are tracked; the complete raw run folders are archived separately and are not tracked in Git.
 - Raw runs: `gs://oe-colab-scale-0903767759/runs/` and the laptop copy `benchmarks/colab_scale/runs/` (not tracked). Per-candidate re-checks are in each run's `rechecked.jsonl`.
