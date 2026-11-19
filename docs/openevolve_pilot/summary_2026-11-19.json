@@ -1,0 +1,162 @@
+{
+  "circle_packing": {
+    "L": {
+      "runs": 3,
+      "seeds": [
+        101,
+        202,
+        303
+      ],
+      "seed_score": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "shipped_verified_score": {
+        "median": 1.7725997468657633,
+        "min": 1.5961868704149018,
+        "max": 2.1199999999999997
+      },
+      "shipped_working_score": {
+        "median": 0.6727133764196445,
+        "min": 0.6057635181840235,
+        "max": 0.8045540796963945
+      },
+      "best_verified_score": {
+        "median": 1.7725997468657633,
+        "min": 1.5961868704149018,
+        "max": 2.1199999999999997
+      },
+      "false_improvement_rate": {
+        "median": 0.07894736842105263,
+        "min": 0.021739130434782608,
+        "max": 0.30357142857142855
+      },
+      "pooled_false_improvement_rate": 0.15,
+      "shipped_false_runs": 0,
+      "argon_calls": 0,
+      "argon_tokens": 0,
+      "argon_wall_s": 0,
+      "gemma_wall_s": 27820.065180778503
+    },
+    "B": {
+      "runs": 3,
+      "seeds": [
+        101,
+        202,
+        303
+      ],
+      "seed_score": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "shipped_verified_score": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 1.7934997456069208
+      },
+      "shipped_working_score": {
+        "median": 0.6806450647464596,
+        "min": 0.6676609712153908,
+        "max": 0.6895288232846017
+      },
+      "best_verified_score": {
+        "median": 1.7151189329401193,
+        "min": 1.4901019817854253,
+        "max": 1.7934997456069208
+      },
+      "false_improvement_rate": {
+        "median": 0.23076923076923078,
+        "min": 0.20833333333333334,
+        "max": 0.3055555555555556
+      },
+      "pooled_false_improvement_rate": 0.2558139534883721,
+      "shipped_false_runs": 2,
+      "argon_calls": 0,
+      "argon_tokens": 0,
+      "argon_wall_s": 0,
+      "gemma_wall_s": 21025.191787719727
+    }
+  },
+  "knn": {
+    "L": {
+      "runs": 3,
+      "seeds": [
+        101,
+        202,
+        303
+      ],
+      "seed_score": {
+        "median": 0.1881654873018041,
+        "min": 0.18095942577326574,
+        "max": 0.1939737686838893
+      },
+      "shipped_verified_score": {
+        "median": 0.1881654873018041,
+        "min": 0.18095942577326574,
+        "max": 0.1939737686838893
+      },
+      "shipped_working_score": {
+        "median": 0.5403768833709445,
+        "min": 0.4009859231716226,
+        "max": 0.5984562463758115
+      },
+      "best_verified_score": {
+        "median": 0.24897124891855554,
+        "min": 0.23648546530045117,
+        "max": 0.2616895012954129
+      },
+      "false_improvement_rate": {
+        "median": 1.0,
+        "min": 0.8235294117647058,
+        "max": 1.0
+      },
+      "pooled_false_improvement_rate": 0.9285714285714286,
+      "shipped_false_runs": 3,
+      "argon_calls": 0,
+      "argon_tokens": 0,
+      "argon_wall_s": 0,
+      "gemma_wall_s": 33011.80539417267
+    },
+    "B": {
+      "runs": 3,
+      "seeds": [
+        101,
+        202,
+        303
+      ],
+      "seed_score": {
+        "median": 0.13876522300006586,
+        "min": 0.1337567134186661,
+        "max": 0.15643506215405392
+      },
+      "shipped_verified_score": {
+        "median": 0.13876522300006586,
+        "min": 0.1337567134186661,
+        "max": 0.15643506215405392
+      },
+      "shipped_working_score": {
+        "median": 0.5131013556559175,
+        "min": 0.4142359134446519,
+        "max": 0.528293944535969
+      },
+      "best_verified_score": {
+        "median": 0.13876522300006586,
+        "min": 0.1337567134186661,
+        "max": 0.15643506215405392
+      },
+      "false_improvement_rate": {
+        "median": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "pooled_false_improvement_rate": 1.0,
+      "shipped_false_runs": 3,
+      "argon_calls": 0,
+      "argon_tokens": 0,
+      "argon_wall_s": 0,
+      "gemma_wall_s": 35277.59014773369
+    }
+  }
+}
