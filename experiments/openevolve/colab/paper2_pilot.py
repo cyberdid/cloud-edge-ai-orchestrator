@@ -31,6 +31,13 @@ def run_checked(args: list[str], *, env=None, cwd=None, timeout: int = 3600) -> 
     return result.stdout
 
 
+def ensure_system_package(package: str) -> None:
+    if shutil.which(package) is not None:
+        return
+    run_checked(["apt-get", "update", "-qq"], timeout=1200)
+    run_checked(["apt-get", "install", "-y", package], timeout=1200)
+
+
 def bootstrap() -> dict:
     """Install pinned research dependencies and the local Gemma inference server."""
     if KEY_SOURCE.exists():
@@ -68,6 +75,7 @@ def bootstrap() -> dict:
     run_checked(["chmod", "-R", "a+rX", "/opt/oe-cand", "/opt/uv-python"])
 
     if shutil.which("ollama") is None:
+        ensure_system_package("zstd")
         installer_env = dict(os.environ, OLLAMA_VERSION="0.40.13")
         run_checked(["bash", "-lc", "curl -fsSL https://ollama.com/install.sh | sh"],
                     env=installer_env, timeout=1800)
