@@ -153,10 +153,40 @@ def build_metrics() -> dict:
                 lc_selected.append(pair_out[arm])
         knn_pairs.append({
             "seed": int(pair["seed"]),
+            "cohort": pair["cohort"],
             "L": pair_out["L"],
             "LC": pair_out["LC"],
             "LC_minus_L_verified_score": pair_out["LC"]["verified_score_median"] - pair_out["L"]["verified_score_median"],
         })
+
+    cohort_descriptives = []
+    circle_pairs = [r for r in read_csv(PAIRS) if r["task"] == "circle_packing"]
+    for task, rows in (("circle_packing", circle_pairs), ("knn", pair_rows)):
+        for raw_cohort in ("preregistered_101_505", "existing_controls_606_1010"):
+            cohort_rows = [r for r in rows if r["cohort"] == raw_cohort]
+            if not cohort_rows:
+                continue
+            if task == "circle_packing":
+                left = [float(r["L_primary_score"]) for r in cohort_rows]
+                right = [float(r["LC_primary_score"]) for r in cohort_rows]
+                deltas = [float(r["paired_delta_LC_minus_L"]) for r in cohort_rows]
+            else:
+                pairs_by_seed = {str(r["seed"]): r for r in knn_pairs}
+                selected = [pairs_by_seed[r["seed"]] for r in cohort_rows]
+                left = [r["L"]["verified_score_median"] for r in selected]
+                right = [r["LC"]["verified_score_median"] for r in selected]
+                deltas = [r["LC_minus_L_verified_score"] for r in selected]
+            cohort_descriptives.append({
+                "task": task,
+                "cohort": "initial_preregistered" if raw_cohort == "preregistered_101_505" else "later_matched_pairs",
+                "seeds": sorted(int(r["seed"]) for r in cohort_rows),
+                "n_pairs": len(cohort_rows),
+                "L_median": median(left),
+                "LC_median": median(right),
+                "LC_higher_equal_lower": [sum(x > 0 for x in deltas), sum(x == 0 for x in deltas), sum(x < 0 for x in deltas)],
+                "inferential_test_performed": False,
+                "source": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv; docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl",
+            })
 
     # Rank stability is limited to the ten unique programs actually selected in
     # the nine LC/L pairs (one shared seed program plus nine LC programs).
@@ -242,6 +272,7 @@ def build_metrics() -> dict:
                 "evaluations_not_unique_programs": True,
             },
         },
+        "lc_cohort_descriptives": cohort_descriptives,
         "sources": {
             "final_inventory": "docs/colab_scale/FINAL_RUNS_2026-11-11.json",
             "run_level_summary": "docs/colab_scale/results/exploratory_tests_2026-11-19.json",

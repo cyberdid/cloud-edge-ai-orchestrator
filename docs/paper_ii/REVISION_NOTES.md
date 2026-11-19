@@ -23,6 +23,7 @@
 - Corrected the LC kNN false-improvement claim: 60/213 (28.2%) above-working-seed **candidate evaluations** were false improvements; 4 failed validity checks and 56 passed validity but had a combined verified score no greater than the pooled seed. This does not mean that the 56 were simply “not faster”: the score combines recall and a relative-time penalty.
 - Stated that evaluation denominators include repeated evaluations of code hashes and therefore do not represent unique programs.
 - Added the omitted 31B circle-packing rows to the false-improvement table: L 56/404 (13.9%) and B 90/336 (26.8%); kNN was not run for 31B.
+- Added the available descriptive split of the nine LC/L pairs: five initial registered pairs (seeds 101–505) and four later pairs (606–909), with per-task median scores and higher/equal/lower counts. No subgroup significance tests were added.
 - Did not calculate all-candidate kNN regret. About 1,900 below-seed candidates were not serially re-timed, so the public data cannot establish the best verified result over the complete candidate pool.
 
 ### 3. kNN component and ranking audit

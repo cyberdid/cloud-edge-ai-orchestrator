@@ -121,6 +121,7 @@
     "lc_l_pairs": [
       {
         "seed": 101,
+        "cohort": "preregistered_101_505",
         "L": {
           "run_id": "knn_L_s101",
           "seed": 101,
@@ -157,6 +158,7 @@
       },
       {
         "seed": 202,
+        "cohort": "preregistered_101_505",
         "L": {
           "run_id": "knn_L_s202",
           "seed": 202,
@@ -193,6 +195,7 @@
       },
       {
         "seed": 303,
+        "cohort": "preregistered_101_505",
         "L": {
           "run_id": "knn_L_s303",
           "seed": 303,
@@ -229,6 +232,7 @@
       },
       {
         "seed": 404,
+        "cohort": "preregistered_101_505",
         "L": {
           "run_id": "knn_L_s404",
           "seed": 404,
@@ -265,6 +269,7 @@
       },
       {
         "seed": 505,
+        "cohort": "preregistered_101_505",
         "L": {
           "run_id": "knn_L_s505",
           "seed": 505,
@@ -301,6 +306,7 @@
       },
       {
         "seed": 606,
+        "cohort": "existing_controls_606_1010",
         "L": {
           "run_id": "knn_L_s606",
           "seed": 606,
@@ -337,6 +343,7 @@
       },
       {
         "seed": 707,
+        "cohort": "existing_controls_606_1010",
         "L": {
           "run_id": "knn_L_s707",
           "seed": 707,
@@ -373,6 +380,7 @@
       },
       {
         "seed": 808,
+        "cohort": "existing_controls_606_1010",
         "L": {
           "run_id": "knn_L_s808",
           "seed": 808,
@@ -409,6 +417,7 @@
       },
       {
         "seed": 909,
+        "cohort": "existing_controls_606_1010",
         "L": {
           "run_id": "knn_L_s909",
           "seed": 909,
@@ -529,6 +538,90 @@
       "evaluations_not_unique_programs": true
     }
   },
+  "lc_cohort_descriptives": [
+    {
+      "task": "circle_packing",
+      "cohort": "initial_preregistered",
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "n_pairs": 5,
+      "L_median": 2.1480868081624647,
+      "LC_median": 2.626293702965051,
+      "LC_higher_equal_lower": [
+        3,
+        1,
+        1
+      ],
+      "inferential_test_performed": false,
+      "source": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv; docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl"
+    },
+    {
+      "task": "circle_packing",
+      "cohort": "later_matched_pairs",
+      "seeds": [
+        606,
+        707,
+        808,
+        909
+      ],
+      "n_pairs": 4,
+      "L_median": 2.2152757544707837,
+      "LC_median": 2.6342923890708407,
+      "LC_higher_equal_lower": [
+        4,
+        0,
+        0
+      ],
+      "inferential_test_performed": false,
+      "source": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv; docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl"
+    },
+    {
+      "task": "knn",
+      "cohort": "initial_preregistered",
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "n_pairs": 5,
+      "L_median": 0.2234535519785333,
+      "LC_median": 0.99985,
+      "LC_higher_equal_lower": [
+        5,
+        0,
+        0
+      ],
+      "inferential_test_performed": false,
+      "source": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv; docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl"
+    },
+    {
+      "task": "knn",
+      "cohort": "later_matched_pairs",
+      "seeds": [
+        606,
+        707,
+        808,
+        909
+      ],
+      "n_pairs": 4,
+      "L_median": 0.2234535519785333,
+      "LC_median": 0.7076109856110341,
+      "LC_higher_equal_lower": [
+        3,
+        0,
+        1
+      ],
+      "inferential_test_performed": false,
+      "source": "docs/colab_scale/results/lc_paired_outcomes_2026-11-08.csv; docs/colab_scale/results/knn_serial_retiming_2026-11-19.jsonl"
+    }
+  ],
   "sources": {
     "final_inventory": "docs/colab_scale/FINAL_RUNS_2026-11-11.json",
     "run_level_summary": "docs/colab_scale/results/exploratory_tests_2026-11-19.json",
