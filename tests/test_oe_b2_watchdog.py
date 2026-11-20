@@ -164,3 +164,11 @@ def test_colab_kernel_launcher_arguments_do_not_break_rehearsal(monkeypatch, cap
 
     assert called["stage"] == "upload"
     assert "B2_REHEARSAL_RESULT" in capsys.readouterr().out
+
+
+def test_b2_systemd_unit_starts_watchdog_as_a_repo_module():
+    unit = (Path(__file__).parents[1] / "scripts/colab/paper2-b2-estimation.service").read_text()
+
+    assert "WorkingDirectory=/opt/paper2-b2/repo" in unit
+    assert ("ExecStart=/opt/oe-watchdog/bin/python -m "
+            "experiments.openevolve.colab.paper2_b2_watchdog --live") in unit
