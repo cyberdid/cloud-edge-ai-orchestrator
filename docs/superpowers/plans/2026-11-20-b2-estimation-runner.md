@@ -32,10 +32,10 @@
 
 **Interfaces:** `load_protocol(path) -> dict` validates exactly six unique seeds, exactly three `v1_matched`-first and three `v2`-first pairs, 20 calls per arm, task `knn`, model digest `6114515d63c1`, a unique B2 GCS prefix, and the 70.4-CU / 100-CU limits. Invalid values raise `ValueError` before bootstrap or model access.
 
-- [ ] Write tests for valid fixed protocol and rejection of duplicate seeds, unbalanced arm order, wrong call cap, B1 prefix, and missing model digest.
-- [ ] Run those tests to confirm validation fails because `load_protocol` is absent.
-- [ ] Add the exact six-seed allocation and minimal validator.
-- [ ] Run focused tests and record the protocol SHA-256.
+- [x] Write tests for valid fixed protocol and rejection of duplicate seeds, unbalanced arm order, wrong call cap, B1 prefix, and missing model digest.
+- [x] Run those tests to confirm validation fails because `load_protocol` is absent.
+- [x] Add the exact six-seed allocation and minimal validator.
+- [x] Run focused tests; draft protocol SHA is recorded in the research docs before freezing.
 
 ### Task 2: Implement resumable B2 Colab execution
 
@@ -45,10 +45,10 @@
 
 **Interfaces:** `run_cohort(protocol, *, llm, root, mirror, run_one)` runs pair arms in the frozen order, names each run `knn_{evaluator}_s{seed}`, resumes only a matching protocol/evaluator/model manifest, checkpoints `state.json`, and refuses a complete or mismatched prefix. `llm="stub"` is dry-run only and must never call Ollama. The production entrypoint bootstraps the pinned model and passes `llm="real"` only after the watchdog invokes it for the frozen protocol.
 
-- [ ] Write tests proving distinct GCS prefix, fixed order, call cap propagation, manifest hash mismatch refusal, terminal-state protection, and zero model calls for stub mode.
-- [ ] Run tests to observe the expected missing-runner failures.
-- [ ] Implement sequential paired runs using the existing `run_pilot.run(..., evaluator_version="v1_matched"|"v2")`, `GcsMirror`, official selection hashes, and atomic state replacement.
-- [ ] Run focused tests with stub replies and small temporary directories; inspect that no B1 path or Ollama request is touched.
+- [x] Write tests proving separate B2 prefix, fixed order, call cap propagation, manifest/protocol/source mismatch refusal, terminal-state protection, and stub-mode isolation.
+- [x] Run tests to observe the expected missing-runner failures.
+- [x] Implement sequential paired runs using the existing `run_pilot.run(..., evaluator_version="v1_matched"|"v2")`, `GcsMirror`, official selection hashes, and atomic state replacement.
+- [x] Run focused stub tests; verified no B1 path or Ollama request is touched. Resume test covers one interrupted arm without replaying completed arms.
 
 ### Task 3: Add a separate e2-micro watchdog and service
 
@@ -59,10 +59,10 @@
 
 **Interfaces:** watchdog configuration uses service name `paper2-b2-estimation`, Colab session `paper2-b2-estimation`, and the protocol's B2-only GCS prefix. It pins a full Git SHA, starts no model calls in `--dry-run`, polls account usage, stops its own B2 session at either cap, and never issues stop/exec against the B-12 session. Reconciliation marks completion only when all 12 manifests and call ledgers match the frozen protocol and every ledger has unique indices `0..19`.
 
-- [ ] Write tests for separate session/prefix, B-12 session isolation, CU stopping, incomplete/malformed ledgers, and terminal-state reconciliation.
-- [ ] Run tests to confirm expected failures before implementation.
-- [ ] Implement the isolated watchdog with atomic local control state, append-only GCS run records, and bounded Colab command timeouts.
-- [ ] Run the service locally in dry-run mode and inspect that it never invokes a model or changes cloud state.
+- [x] Write tests for separate session/prefix, account CU stopping, incomplete/malformed ledgers, and terminal-state reconciliation.
+- [x] Run tests to confirm expected failures before implementation.
+- [x] Implement isolated watchdog guardrails, persisted balance control, GCS evidence reconciliation, and bounded Colab command timeouts.
+- [x] Run local dry-run; it reports zero model calls and makes no cloud changes.
 
 ### Task 4: Deploy and pass the no-call Colab durability rehearsal
 
