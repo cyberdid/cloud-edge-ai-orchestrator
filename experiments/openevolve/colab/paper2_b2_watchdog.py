@@ -132,6 +132,11 @@ def _read_gcs_state(protocol: dict[str, Any]) -> dict[str, Any] | None:
     return json.loads(blob.download_as_text())
 
 
+def _read_rehearsal_phase(protocol: dict[str, Any], run_id: str) -> dict[str, Any]:
+    name = f"{protocol['gcs_prefix']}/no-call-rehearsal/{run_id}/phase.json"
+    return json.loads(_gcs_client().bucket(protocol["bucket"]).blob(name).download_as_text())
+
+
 def _reconcile_gcs(protocol: dict[str, Any], state: dict[str, Any]) -> dict[str, Any] | None:
     bucket = _gcs_client().bucket(protocol["bucket"])
     evidence: dict[str, dict[str, Any]] = {}
@@ -366,11 +371,9 @@ def _run_rehearsal(protocol: dict[str, Any], protocol_sha256: str, source_commit
                        "--env", f"PAPER2_GIT_SHA={source_commit}",
                        "--env", f"B2_REHEARSAL_RUN_ID={run_id}", "--timeout", "900"],
                       timeout=1000, check=False)
-        marker = "B2_REHEARSAL_RESULT="
-        for line in reversed(result.stdout.splitlines()):
-            if marker in line:
-                return json.loads(line.split(marker, 1)[1])
-        raise RuntimeError(f"B2 no-call {stage} stage failed (exit {result.returncode})")
+        if result.returncode:
+            raise RuntimeError(f"B2 no-call {stage} stage failed (exit {result.returncode})")
+        return _read_rehearsal_phase(protocol, run_id)
 
     try:
         _prepare_session()
