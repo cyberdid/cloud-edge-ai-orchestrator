@@ -356,7 +356,6 @@ def _run_rehearsal(protocol: dict[str, Any], protocol_sha256: str, source_commit
             raise RuntimeError("B2 session is busy; refusing to interfere with an active run")
         _stop_session()
     _ensure_repo(source_commit)
-    _prepare_session()
     run_id = f"rehearsal-{int(time.time())}"
 
     def execute(stage: str) -> dict[str, Any]:
@@ -374,6 +373,7 @@ def _run_rehearsal(protocol: dict[str, Any], protocol_sha256: str, source_commit
         raise RuntimeError(f"B2 no-call {stage} stage failed (exit {result.returncode})")
 
     try:
+        _prepare_session()
         uploaded = execute("upload")
         if uploaded.get("phase") != "uploaded" or uploaded.get("model_calls") != 0:
             raise RuntimeError("no-call upload stage returned unexpected evidence")
