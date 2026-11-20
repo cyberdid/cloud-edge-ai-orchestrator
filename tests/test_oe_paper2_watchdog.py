@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from experiments.openevolve.colab import paper2_watchdog
@@ -31,6 +33,25 @@ def _call_rows():
     return [{"call_index": i, "model": "gemma", "status": "ok"} for i in range(20)]
 
 
+class _FakeBlob:
+    def __init__(self, bucket, name):
+        self.bucket, self.name = bucket, name
+
+    def download_as_text(self):
+        return self.bucket.objects[self.name]
+
+    def upload_from_string(self, value, **_kwargs):
+        self.bucket.objects[self.name] = value
+
+
+class _FakeBucket:
+    def __init__(self, objects):
+        self.objects = objects
+
+    def blob(self, name):
+        return _FakeBlob(self, name)
+
+
 def test_completed_manifests_and_contiguous_ledgers_reconcile_state():
     state = _complete_state()
     manifests = {version: _completed_manifest(version) for version in ("v1", "v2")}
@@ -57,6 +78,37 @@ def test_inconsistent_or_incomplete_records_are_not_reconciled(mutate):
 
     with pytest.raises(ValueError):
         paper2_watchdog.verify_completed_runs(state, manifests, calls)
+
+
+def test_reconcile_completed_gcs_state_preserves_raw_run_artifacts():
+    state = _complete_state() | {"phase": "running"}
+    objects = {"paper2-v2/b1/state.json": json.dumps(state)}
+    for version in ("v1", "v2"):
+        prefix = f"paper2-v2/b1/runs/knn_{version}_s20261119"
+        objects[f"{prefix}/manifest.json"] = json.dumps(_completed_manifest(version))
+        objects[f"{prefix}/calls.jsonl"] = "\n".join(json.dumps(row) for row in _call_rows())
+    original_runs = {key: value for key, value in objects.items() if "/runs/" in key}
+
+    reconciled = paper2_watchdog.reconcile_completed_runs(state, bucket=_FakeBucket(objects))
+
+    assert reconciled["phase"] == "complete"
+    assert reconciled["completed_conditions"] == ["v1", "v2"]
+    assert reconciled["reconciliation"]["raw_run_artifacts_modified"] is False
+    assert {key: value for key, value in objects.items() if "/runs/" in key} == original_runs
+    assert json.loads(objects["paper2-v2/b1/state.json"])["phase"] == "complete"
+
+
+def test_reconcile_does_not_write_state_when_a_condition_is_incomplete():
+    state = _complete_state() | {"phase": "running"}
+    objects = {"paper2-v2/b1/state.json": json.dumps(state)}
+    for version in ("v1", "v2"):
+        prefix = f"paper2-v2/b1/runs/knn_{version}_s20261119"
+        objects[f"{prefix}/manifest.json"] = json.dumps(_completed_manifest(version))
+        calls = _call_rows()[:-1] if version == "v2" else _call_rows()
+        objects[f"{prefix}/calls.jsonl"] = "\n".join(json.dumps(row) for row in calls)
+
+    assert paper2_watchdog.reconcile_completed_runs(state, bucket=_FakeBucket(objects)) is None
+    assert json.loads(objects["paper2-v2/b1/state.json"])["phase"] == "running"
 
 
 def test_parse_usage_balance_from_colab_cli():
