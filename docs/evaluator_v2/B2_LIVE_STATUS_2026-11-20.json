@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T10:15:30Z",
-  "as_of_unix": 1795169730,
+  "as_of_utc": "2026-11-20T10:28:19Z",
+  "as_of_unix": 1795170499,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,12 +18,13 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 202.90,
-    "observed_pooled_draw_since_launch_cu": 4.03,
-    "remaining_draw_headroom_cu": 66.37,
-    "balance_above_minimum_cu": 102.90,
+    "current_balance_cu": 202.26,
+    "observed_pooled_draw_since_launch_cu": 4.67,
+    "remaining_draw_headroom_cu": 65.73,
+    "balance_above_minimum_cu": 102.26,
     "active_assignments": 2,
-    "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone."
+    "pooled_usage_rate_cu_per_hour": 3.88,
+    "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone. At the observed pooled rate, the draw cap is approximately 16.9 hours away, but this is not a guaranteed forecast."
   },
   "run_progress": {
     "assigned_runs": 12,
@@ -32,12 +33,17 @@
     "current_run": "P2:v1_matched",
     "current_task_seed": 20261121,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795169698.438836,
+    "gcs_last_state_update_unix": 1795170412.2764297,
     "current_arm_manifest_status": "running",
-    "current_arm_model_call_entries": 4,
-    "current_arm_call_status_counts": {"ok": 4},
-    "current_arm_candidate_records": 5,
+    "current_arm_model_call_entries": 11,
+    "current_arm_call_status_counts": {"ok": 9, "truncated": 2},
+    "current_arm_candidate_records": 8,
     "current_arm_candidate_records_with_boolean_validity": 0,
+    "current_arm_truncated_calls_at_completion_token_limit": 2,
+    "model_call_entries_total_across_cohort": 51,
+    "measured_mean_intercall_minutes_completed_arms": {"P1:v2": 1.30, "P1:v1_matched": 1.23, "P2:v1_matched_current_prefix": 1.69},
+    "rough_remaining_wall_time_hours": "about 4.3 hours at observed call cadence, plus arm handoffs/runtime variability; plan for roughly 4-6 hours",
+    "remaining_model_call_entries": 189,
     "completed_pair_P1": {
       "v1_matched": {
         "manifest_status": "complete",
@@ -66,7 +72,7 @@
       "selection_sha256_same_in_both_arms": true,
       "selection_file_bytes_match_manifest_hash_in_both_arms": true
     },
-    "total_truncated_calls_observed": 9,
+    "total_truncated_calls_observed": 11,
     "all_truncated_calls_reached_completion_token_limit": true,
     "completion_token_limit": 2048,
     "independent_recheck": "deferred_until_all_12_arms_finish"
