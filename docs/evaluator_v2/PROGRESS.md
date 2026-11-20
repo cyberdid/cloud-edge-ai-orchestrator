@@ -8,7 +8,7 @@ Last updated: 2026-11-20
 |---|---|---|
 | A1–A3: manuscript corrections | Complete in `main` commit `0e5f8fb1bb0279dffd656618ff2ab3a0a17f17e8` | Preregistration history, claims, and layout revisions are in that commit. |
 | B1: evaluator V2 feasibility pilot | Complete as a technical feasibility run; top-level GCS state reconciled after runner response loss | V1 and V2 each have a `complete` manifest and exactly 20 contiguous call records (18 `ok`, 2 `truncated`); evaluator/model/seed/protocol/commit match. Raw artifacts are in `gs://oe-colab-scale-0903767759/paper2-v2/b1/`. No active Colab assignment remains. This is one-seed descriptive evidence, not a confirmatory result. See `DEVIATIONS.md` and `B1_RESULTS.md`. |
-| B2: confirmatory V1/V2 comparison | Not started | Use B1 only to validate feasibility. Freeze a separate protocol, sample size, and budget before any confirmatory model calls. |
+| B2: confirmatory V1/V2 comparison | Protocol design not started | Use B1 only to validate feasibility. The watchdog terminal-write race/recovery path has now been patched and covered by focused tests; the service remains disabled and no new Colab session is running. Freeze a separate protocol, sample size, and budget before any confirmatory model calls. |
 | C: VoiceID external validation | Not started | Design a separate evaluator-validation study; do not transfer private audio or embeddings to cloud compute without a specific data authorization and privacy review. |
 
 ## Frozen B1 feasibility pilot
@@ -27,6 +27,7 @@ Last updated: 2026-11-20
 - V2: 18 `ok`, 2 `truncated`; 9 candidate records; recorded wall time 2729.0 s. Three candidates were marked valid; six received zero after timeouts (one preflight, five timed evaluation). No observed candidate specifically tested fabricated distances.
 - The top-level GCS state was stale after both manifests completed because the watchdog did not receive/observe the runner's final response. After verifying both manifests and raw call ledgers, the watchdog service was stopped and the GCS state reconciled to complete with an audit note. No raw run files were edited or regenerated.
 - The frozen feasibility questions about checkpoint continuity and the evaluator implementation are partly supported by these records and offline tests. Because V1 required six runtime starts and the pilot had one seed, no effectiveness, equivalence, or population-level claim follows.
+- After reviewing B1, the runner's terminal-state heartbeat race and watchdog recovery path were patched in source. Focused verification: `uv run pytest -q tests/test_oe_paper2_watchdog.py tests/test_oe_paper2_bootstrap.py` (19 passed), Python compilation for both runner modules, and `git diff --check`. The e2-micro service stays disabled until a separate protocol and run are ready.
 
 ## Durability gate before laptop shutdown
 

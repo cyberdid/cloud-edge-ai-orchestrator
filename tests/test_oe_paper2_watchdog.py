@@ -9,6 +9,56 @@ from experiments.openevolve.colab.paper2_watchdog import (
 )
 
 
+def _completed_manifest(version):
+    return {
+        "status": "complete", "evaluator_version": version, "task": "knn", "arm": "L",
+        "seed": 20261119, "git_sha": "a" * 40,
+        "protocol_id": "evaluator-v2-pilot-2026-11-19", "protocol_sha256": "b" * 64,
+        "model_digest": "model-digest", "wall_s": 123.0,
+    }
+
+
+def _complete_state():
+    return {
+        "git_sha": "a" * 40, "protocol_id": "evaluator-v2-pilot-2026-11-19",
+        "protocol_sha256": "b" * 64, "model": "gemma4:12b", "task": "knn",
+        "seed": 20261119, "calls_per_condition": 20,
+        "bootstrap": {"model_digest": "model-digest"},
+    }
+
+
+def _call_rows():
+    return [{"call_index": i, "model": "gemma", "status": "ok"} for i in range(20)]
+
+
+def test_completed_manifests_and_contiguous_ledgers_reconcile_state():
+    state = _complete_state()
+    manifests = {version: _completed_manifest(version) for version in ("v1", "v2")}
+    calls = {version: _call_rows() for version in ("v1", "v2")}
+
+    summaries = paper2_watchdog.verify_completed_runs(state, manifests, calls)
+
+    assert [row["evaluator_version"] for row in summaries] == ["v1", "v2"]
+    assert all(row["calls"] == 20 and row["status"] == "complete" for row in summaries)
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda manifests, calls: manifests["v2"].update(status="running"),
+    lambda manifests, calls: calls["v1"].pop(),
+    lambda manifests, calls: calls["v2"].__setitem__(19, {"call_index": 18, "model": "gemma"}),
+    lambda manifests, calls: manifests["v1"].update(git_sha="c" * 40),
+    lambda manifests, calls: calls["v1"][0].update(model="argon"),
+])
+def test_inconsistent_or_incomplete_records_are_not_reconciled(mutate):
+    state = _complete_state()
+    manifests = {version: _completed_manifest(version) for version in ("v1", "v2")}
+    calls = {version: _call_rows() for version in ("v1", "v2")}
+    mutate(manifests, calls)
+
+    with pytest.raises(ValueError):
+        paper2_watchdog.verify_completed_runs(state, manifests, calls)
+
+
 def test_parse_usage_balance_from_colab_cli():
     output = "Current balance: 224.37 compute units\nUsage rate: 1.94/hr\nActive assignments: 1"
 

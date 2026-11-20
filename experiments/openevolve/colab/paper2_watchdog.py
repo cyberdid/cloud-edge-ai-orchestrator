@@ -56,6 +56,78 @@ def _gcs_state() -> dict | None:
     return json.loads(blob.download_as_text())
 
 
+def verify_completed_runs(state: dict, manifests: dict[str, dict],
+                          calls: dict[str, list[dict]]) -> list[dict]:
+    """Validate immutable per-condition evidence before repairing top-level state."""
+    expected_versions = ("v1", "v2")
+    summaries = []
+    for version in expected_versions:
+        manifest = manifests[version]
+        rows = calls[version]
+        expected = {
+            "status": "complete", "evaluator_version": version, "task": state["task"],
+            "arm": "L", "seed": state["seed"], "git_sha": state["git_sha"],
+            "protocol_id": state["protocol_id"], "protocol_sha256": state["protocol_sha256"],
+            "model_digest": state["bootstrap"]["model_digest"],
+        }
+        for key, value in expected.items():
+            if manifest.get(key) != value:
+                raise ValueError(f"{version} manifest mismatch for {key}")
+        expected_indices = list(range(state["calls_per_condition"]))
+        indices = sorted(row.get("call_index") for row in rows)
+        if indices != expected_indices:
+            raise ValueError(f"{version} call indices are incomplete or duplicated")
+        if any(row.get("model") != "gemma" for row in rows):
+            raise ValueError(f"{version} call ledger contains an unexpected model")
+        statuses: dict[str, int] = {}
+        for row in rows:
+            status = row.get("status")
+            if not isinstance(status, str) or not status:
+                raise ValueError(f"{version} call ledger contains a missing status")
+            statuses[status] = statuses.get(status, 0) + 1
+        summaries.append({"status": "complete", "evaluator_version": version,
+                          "wall_s": manifest.get("wall_s"), "calls": len(rows),
+                          "calls_by_status": statuses,
+                          "runtime_starts": len(manifest.get("starts", []))})
+    return summaries
+
+
+def reconcile_completed_runs(state: dict, *, bucket=None) -> dict | None:
+    """Mark the pilot complete only when both manifests and call ledgers prove it."""
+    if bucket is None:
+        from google.cloud import storage
+
+        bucket = storage.Client().bucket(BUCKET)
+    manifests, calls = {}, {}
+    try:
+        for version in ("v1", "v2"):
+            run_prefix = f"{PREFIX}/runs/knn_{version}_s{state['seed']}"
+            manifest_blob = bucket.blob(f"{run_prefix}/manifest.json")
+            calls_blob = bucket.blob(f"{run_prefix}/calls.jsonl")
+            manifests[version] = json.loads(manifest_blob.download_as_text())
+            calls[version] = [json.loads(line) for line in calls_blob.download_as_text().splitlines()
+                              if line.strip()]
+        summaries = verify_completed_runs(state, manifests, calls)
+    except (KeyError, ValueError, json.JSONDecodeError):
+        return None
+    except Exception as exc:
+        # A missing object is an incomplete run; other storage failures should
+        # reach the supervisor so systemd can retry without mutating state.
+        if exc.__class__.__name__ in {"NotFound", "NoSuchKey"}:
+            return None
+        raise
+
+    updated = {**state, "phase": "complete", "current_condition": None,
+               "completed_conditions": ["v1", "v2"], "summaries": summaries,
+               "updated_unix": time.time(),
+               "reconciliation": {"method": "verified condition manifests and raw call ledgers",
+                                  "raw_run_artifacts_modified": False,
+                                  "reason": "runner completion response was not observed by watchdog"}}
+    bucket.blob(f"{PREFIX}/state.json").upload_from_string(
+        json.dumps(updated, indent=2, sort_keys=True) + "\n", content_type="application/json")
+    return updated
+
+
 def _usage() -> float:
     result = _run([CLI, "usage"])
     return parse_usage_balance(result.stdout)
@@ -151,6 +223,11 @@ def main() -> None:
     if state and state.get("phase") == "complete":
         _stop_session()
         return
+    if state and state.get("phase") in {"running", "error", "interrupted"}:
+        state = reconcile_completed_runs(state) or state
+        if state.get("phase") == "complete":
+            _stop_session()
+            return
 
     usage = _usage()
     if local is None:
@@ -182,6 +259,11 @@ def main() -> None:
         if state and state.get("phase") == "complete":
             _stop_session()
             return
+        if state and state.get("phase") in {"running", "error", "interrupted"}:
+            state = reconcile_completed_runs(state) or state
+            if state.get("phase") == "complete":
+                _stop_session()
+                return
         if state and state.get("phase") == "running" and _session_exists() and _session_busy():
             time.sleep(60)
             continue

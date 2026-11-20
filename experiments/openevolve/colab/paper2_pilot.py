@@ -181,19 +181,28 @@ def main() -> None:
     mirror.restore()
 
     state_path = ROOT / "state.json"
+    state_lock = threading.Lock()
+    terminal_state_written = threading.Event()
     def write_state(phase: str, **extra) -> None:
-        state = {"phase": phase, "updated_unix": time.time(), "git_sha": env["OE_PILOT_GIT_SHA"],
-                 "protocol_id": protocol["protocol_id"], "protocol_sha256": protocol_sha256,
-                 "model": MODEL, "task": "knn", "seed": SEED, "calls_per_condition": CALLS_PER_CONDITION,
-                 "order": list(ORDER), "bootstrap": meta, **extra}
-        tmp = state_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(state, indent=2, sort_keys=True))
-        tmp.replace(state_path)
-        mirror.sync()
+        with state_lock:
+            if phase == "running" and terminal_state_written.is_set():
+                return
+            if phase in {"complete", "error", "interrupted"}:
+                terminal_state_written.set()
+            state = {"phase": phase, "updated_unix": time.time(), "git_sha": env["OE_PILOT_GIT_SHA"],
+                     "protocol_id": protocol["protocol_id"], "protocol_sha256": protocol_sha256,
+                     "model": MODEL, "task": "knn", "seed": SEED, "calls_per_condition": CALLS_PER_CONDITION,
+                     "order": list(ORDER), "bootstrap": meta, **extra}
+            tmp = state_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state, indent=2, sort_keys=True))
+            tmp.replace(state_path)
+            mirror.sync()
 
     stop_sync = threading.Event()
     def checkpoint_loop() -> None:
         while not stop_sync.wait(30):
+            if terminal_state_written.is_set():
+                return
             try:
                 write_state("running", current_condition=current_condition[0])
             except Exception as exc:
