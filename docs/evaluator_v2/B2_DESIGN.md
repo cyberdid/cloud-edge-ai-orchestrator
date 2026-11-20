@@ -102,4 +102,4 @@ Before any B2 call, run a no-model-call cost rehearsal: provision one Colab L4 s
 
 ## 8. B2 launch gate
 
-B2 remains **not ready to launch** until the matched timing implementation exists, the independent holdout is committed and inaccessible to the working evaluator, the run-level endpoint and power assumptions are frozen, the budget fits available Colab CU with contingency, and the no-call watchdog rehearsal passes. The e2-micro service is currently disabled and no Colab assignment is active.
+B2 remains **not ready to launch** until the matched timing implementation exists, the independent holdout is committed and inaccessible to the working evaluator, the run-level endpoint and power assumptions are frozen, the budget fits available Colab CU with contingency, and the no-call watchdog rehearsal passes. As checked on 2026-11-20, the B-12 orchestrator is active and enabled on the e2-micro; the Paper II B1 watchdog unit is inactive and disabled. The Colab account shows one active L4 assignment, but the local CLI did not resolve its session name. Do not reuse or stop that assignment for B2; a separate B2 session, GCS prefix, and watchdog must be prepared.
