@@ -82,7 +82,9 @@ def main() -> None:
     parser.add_argument("--protocol-sha256", default=os.environ.get("B2_PROTOCOL_SHA256"))
     parser.add_argument("--source-commit", default=os.environ.get("PAPER2_GIT_SHA"))
     parser.add_argument("--run-id", default=os.environ.get("B2_REHEARSAL_RUN_ID", "rehearsal-20261120"))
-    args = parser.parse_args()
+    # Colab executes this file inside a Jupyter kernel whose sys.argv contains
+    # launcher-owned flags. The protocol values arrive through the environment.
+    args, _unknown = parser.parse_known_args()
     if not args.stage or not args.protocol_sha256 or not args.source_commit:
         parser.error("stage, protocol SHA-256, and source commit are required")
     print("B2_REHEARSAL_RESULT=" + json.dumps(run_stage(

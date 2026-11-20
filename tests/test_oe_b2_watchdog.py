@@ -133,3 +133,21 @@ def test_no_call_rehearsal_requires_upload_then_restores_sentinel():
     assert restored["model_calls"] == 0
     assert restored["fresh_runtime_restore"] is True
     assert restored["terminal_state_roundtrip"] is True
+
+
+def test_colab_kernel_launcher_arguments_do_not_break_rehearsal(monkeypatch, capsys):
+    import sys
+    from experiments.openevolve.colab import paper2_b2_rehearsal as rehearsal
+
+    called = {}
+    monkeypatch.setenv("B2_REHEARSAL_STAGE", "upload")
+    monkeypatch.setenv("B2_PROTOCOL_SHA256", "a" * 64)
+    monkeypatch.setenv("PAPER2_GIT_SHA", "b" * 40)
+    monkeypatch.setenv("B2_REHEARSAL_RUN_ID", "test")
+    monkeypatch.setattr(sys, "argv", ["colab_kernel_launcher.py", "-f", "connection.json"])
+    monkeypatch.setattr(rehearsal, "run_stage", lambda *a, **kw: called.update(stage=a[0], **kw) or {"phase": "uploaded"})
+
+    rehearsal.main()
+
+    assert called["stage"] == "upload"
+    assert "B2_REHEARSAL_RESULT" in capsys.readouterr().out
