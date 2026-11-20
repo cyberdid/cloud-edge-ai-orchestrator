@@ -8,28 +8,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from experiments.openevolve.colab.b2_protocol import load_protocol
-
-CHECKER_COMPONENTS = (
-    "antigravity_hybrid_orchestrator/integrity/oracle.py",
-    "antigravity_hybrid_orchestrator/runtime/sandbox.py",
-    "experiments/openevolve/candidate_log.py",
-    "experiments/openevolve/tasks/knn/recheck.py",
-    "experiments/openevolve/tasks/knn/data.py",
-    "experiments/openevolve/tasks/knn/driver.py",
-    "experiments/openevolve/sandbox_exec.py",
-    "experiments/openevolve/static_check.py",
-    "experiments/openevolve/tasks/knn/working_evaluator.py",
-)
-
-
-def checker_fingerprint(repo_root: Path) -> dict[str, Any]:
-    components = {}
-    for relative in CHECKER_COMPONENTS:
-        path = repo_root / relative
-        components[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
-    joined = "".join(f"{path}\0{digest}\n" for path, digest in sorted(components.items()))
-    return {"components": components, "sha256": hashlib.sha256(joined.encode()).hexdigest()}
+from experiments.openevolve.colab.b2_protocol import checker_fingerprint, load_protocol
 
 
 def recheck_selected(root: str | Path, protocol: dict[str, Any], *, protocol_sha256: str,

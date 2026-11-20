@@ -1,6 +1,11 @@
-# B2 estimation study — registration draft
+# B2 estimation study — frozen registration and launch gates
 
-**Status:** draft only; no B2 model call has been made. This defines the lower-cost option for the requested B2 launch and requires an operational freeze before model calls. It does not replace the confirmatory design in `B2_DESIGN.md`.
+**Status:** protocol frozen; no B2 model call has been made. This defines the lower-cost, estimation-only option for the requested B2 launch. It does not replace the confirmatory design in `B2_DESIGN.md`.
+
+- Frozen protocol SHA-256: `8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719`
+- Checker fingerprint SHA-256: `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`
+- Independent re-check image: `antigravity-orion:local` (`sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2`)
+- Holdout: fixed source-visible seeds 9001–9003; reproducible independent re-check, not a secret or sealed holdout.
 
 ## Why this is not the 715-CU study
 
@@ -30,20 +35,20 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 ## Required launch gates
 
 1. Keep the existing B-12 project and its active `b12eval` L4 assignment untouched. The e2-micro read-only check currently reports both `b12-orchestrator.service` and the Paper II B1 watchdog as inactive; the account CLI still reports one active L4 assignment. Do not infer that this assignment is B2 or try to attach to it.
-2. Commit the exact six-seed list, randomized arm order, protocol JSON, selected-artifact re-check script, checker component fingerprint, holdout definition, and Docker image digest before any model call.
+2. **Completed in the frozen protocol:** exact six-seed list, balanced arm order, protocol JSON, selected-artifact re-check script, checker component fingerprint, source-visible holdout definition, and Docker image digest.
 3. Implement a B2-specific runner and watchdog with a separate Colab session name, GCS prefix, state file, and budget counter. Do not reuse B1's hard-coded `paper2-v2/b1` prefix or the active B-12 session.
-4. Run the B2 watchdog and persistence path in a fresh Colab runtime with model calls disabled. The GCS sentinel upload, stop/recreate/restore, and terminal-state roundtrip passed; the B2 session was stopped afterward. The runner unit test also verifies resuming only the incomplete arm. A detached systemd/laptop-disconnect test remains outstanding.
+4. Run the B2 watchdog and persistence path in a fresh Colab runtime with model calls disabled. The GCS sentinel upload, stop/recreate/restore, and terminal-state roundtrip passed; a detached systemd `--rehearse` invocation also completed successfully with zero model calls and the B2 session stopped afterward. Repeat this no-call rehearsal for the exact frozen protocol/source hashes before live execution.
 5. Re-check global balance and ensure the 100-CU reserve can be maintained even if the existing active assignment continues.
-6. Only then freeze the preregistration SHA and start the 6-pair estimation cohort. If any gate fails, preserve the draft and run no model calls.
+6. Only after the exact-hash rehearsal, persistent service setup, and immediate balance check, start the 6-pair estimation cohort. If any gate fails, run no model calls.
 
 ## Implementation checkpoint — 2026-11-20
 
 - Added the resumable B2 runner, isolated watchdog, Colab entrypoint, and systemd unit template. The runner refuses live calls while this JSON remains `draft`; its dry-run reports 240 assigned calls and zero model calls.
 - Run manifests must match the pinned source Git SHA, protocol SHA, model digest, evaluator version, seed, and exact 20-call ledger. Resume skips validated completed arms and continues only a matching incomplete arm.
 - The watchdog uses only `paper2-b2-estimation` and `paper2-v2/b2-estimation-2026-11-20`; account-wide guard is 70.4 CU from a persisted fresh start snapshot or 100 CU remaining, whichever comes first.
-- Local focused verification: 31 B2 tests passed; Python compilation and whitespace check passed. The selected-artifact re-check retains interrupted runs as incomplete, and the summary is descriptive-only with no p-value. No Gemma/Argon calls were made.
+- Local focused verification: 34 B2 tests passed; Python compilation, whitespace check, and both runner/watchdog no-call dry-runs passed. The selected-artifact re-check retains interrupted runs as incomplete, and the summary is descriptive-only with no p-value. No Gemma/Argon calls were made.
 - No-call GCS persistence rehearsal passed on 2026-11-20 with source `34d663e2992876a00c179e79adbbc82886797a32`; evidence is in `B2_NO_CALL_REHEARSAL.json`. The Colab runtime was stopped and recreated, the sentinel restored from the dedicated prefix, the synthetic terminal-state record round-tripped, and the B2 session was stopped. The measured account draw was 0.16 CU; the pre-existing L4 assignment remained untouched.
-- Still not launch-ready: the protocol is draft; checker/holdout fingerprint and result schema, frozen source/protocol registration, detached systemd/laptop-disconnect test, service installation, and immediate pre-run balance gate remain outstanding. The committed holdout seeds are not secret. No B2 model call has been made.
+- Still not live-launch-ready: repeat the no-call rehearsal for the frozen source/protocol hashes, install the systemd unit and pinned source environment on the VM, and pass the immediate balance gate. The detached systemd pattern has been demonstrated on the VM, but no persistent B2 service has been started. No B2 model call has been made.
 
 ## Interpretation boundary
 

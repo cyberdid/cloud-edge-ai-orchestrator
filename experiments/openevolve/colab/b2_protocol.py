@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,56 @@ EXPECTED_MODEL_DIGEST = "6114515d63c1"
 EXPECTED_GCS_BUCKET = "oe-colab-scale-0903767759"
 EXPECTED_GCS_PREFIX = "paper2-v2/b2-estimation-"
 EXPECTED_COLAB_SESSION = "paper2-b2-estimation"
+EXPECTED_DOCKER_IMAGE = "antigravity-orion:local"
+EXPECTED_DOCKER_IMAGE_DIGEST = (
+    "sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2"
+)
+EXPECTED_HOLDOUT_DEFINITION = "experiments/openevolve/tasks/knn/recheck.py::HOLDOUT_SETS"
+EXPECTED_HOLDOUT_SEEDS = [9001, 9002, 9003]
+CHECKER_COMPONENTS = (
+    "antigravity_hybrid_orchestrator/integrity/oracle.py",
+    "antigravity_hybrid_orchestrator/runtime/sandbox.py",
+    "experiments/openevolve/candidate_log.py",
+    "experiments/openevolve/tasks/knn/recheck.py",
+    "experiments/openevolve/tasks/knn/data.py",
+    "experiments/openevolve/tasks/knn/driver.py",
+    "experiments/openevolve/sandbox_exec.py",
+    "experiments/openevolve/static_check.py",
+    "experiments/openevolve/tasks/knn/working_evaluator.py",
+    "experiments/openevolve/recheck_b2_selected.py",
+    "experiments/openevolve/analyze_b2_estimation.py",
+)
+
+
+def checker_fingerprint(repo_root: str | Path) -> dict[str, Any]:
+    root = Path(repo_root).resolve()
+    components = {}
+    for relative in CHECKER_COMPONENTS:
+        path = root / relative
+        if not path.is_file():
+            raise ValueError(f"checker component is missing: {relative}")
+        components[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    joined = "".join(f"{path}\0{digest}\n" for path, digest in sorted(components.items()))
+    return {"components": components, "sha256": hashlib.sha256(joined.encode()).hexdigest()}
+
+
+def _validate_frozen_verification(protocol: dict[str, Any]) -> None:
+    verification = protocol.get("verification")
+    if not isinstance(verification, dict):
+        raise ValueError("frozen protocol requires verification metadata")
+    if verification.get("docker_image") != EXPECTED_DOCKER_IMAGE:
+        raise ValueError("frozen verification Docker image name is not registered")
+    if verification.get("docker_image_digest") != EXPECTED_DOCKER_IMAGE_DIGEST:
+        raise ValueError("frozen verification Docker image digest is not registered")
+    if verification.get("holdout_definition") != EXPECTED_HOLDOUT_DEFINITION:
+        raise ValueError("frozen verification holdout definition is not registered")
+    if verification.get("holdout_seeds") != EXPECTED_HOLDOUT_SEEDS:
+        raise ValueError("frozen verification holdout seeds are not registered")
+    if verification.get("holdout_visibility") != "source_visible_fixed":
+        raise ValueError("frozen verification must disclose source-visible holdout status")
+    expected = checker_fingerprint(Path(__file__).resolve().parents[3])
+    if verification.get("components") != expected["components"] or verification.get("sha256") != expected["sha256"]:
+        raise ValueError("frozen verification checker fingerprint does not match source components")
 
 
 def load_protocol(path: str | Path) -> dict[str, Any]:
@@ -34,6 +85,8 @@ def load_protocol(path: str | Path) -> dict[str, Any]:
         raise ValueError(f"protocol is missing required fields: {', '.join(missing)}")
     if protocol["status"] not in {"draft", "frozen"}:
         raise ValueError("protocol status must be draft or frozen")
+    if protocol["status"] == "frozen":
+        _validate_frozen_verification(protocol)
     if protocol["study_type"] != "estimation_feasibility":
         raise ValueError("this runner accepts estimation_feasibility protocols only")
     if protocol["task"] != "knn":

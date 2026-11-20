@@ -107,6 +107,7 @@ def test_runner_executes_fixed_balanced_pairs_and_mirrors_terminal_state(tmp_pat
 
 def test_real_model_calls_refuse_unfrozen_protocol_before_run(tmp_path):
     protocol = load_protocol(PROTOCOL_PATH)
+    protocol["status"] = "draft"
     fake_run, calls = fake_run_factory()
 
     with pytest.raises(ValueError, match="frozen"):

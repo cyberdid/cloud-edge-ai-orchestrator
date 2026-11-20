@@ -54,12 +54,57 @@ def test_load_protocol_accepts_balanced_six_pair_estimation_design(tmp_path):
     assert loaded["max_total_calls"] == 240
 
 
-def test_committed_b2_protocol_is_still_a_non_launchable_draft():
+def test_committed_b2_protocol_is_frozen_with_verification_registration():
     from experiments.openevolve.colab.b2_protocol import load_protocol
 
     source = Path(__file__).parents[1] / "experiments/openevolve/configs/b2_estimation_2026-11-20.json"
 
-    assert load_protocol(source)["status"] == "draft"
+    protocol = load_protocol(source)
+    assert protocol["status"] == "frozen"
+    assert protocol["verification"]["holdout_visibility"] == "source_visible_fixed"
+    assert protocol["verification"]["docker_image_digest"].startswith("sha256:")
+
+
+def _frozen_protocol_with_current_verification():
+    from experiments.openevolve.colab.b2_protocol import (
+        EXPECTED_DOCKER_IMAGE, EXPECTED_DOCKER_IMAGE_DIGEST, checker_fingerprint,
+    )
+
+    payload = valid_protocol()
+    payload["status"] = "frozen"
+    payload["verification"] = {
+        **checker_fingerprint(Path(__file__).parents[1]),
+        "docker_image": EXPECTED_DOCKER_IMAGE,
+        "docker_image_digest": EXPECTED_DOCKER_IMAGE_DIGEST,
+        "holdout_definition": "experiments/openevolve/tasks/knn/recheck.py::HOLDOUT_SETS",
+        "holdout_seeds": [9001, 9002, 9003],
+        "holdout_visibility": "source_visible_fixed",
+    }
+    return payload
+
+
+def test_frozen_protocol_requires_checker_image_and_holdout_registration(tmp_path):
+    payload = valid_protocol()
+    payload["status"] = "frozen"
+    source = write_protocol(tmp_path / "frozen.json", payload)
+
+    with pytest.raises(ValueError, match="verification"):
+        loader()(source)
+
+
+def test_frozen_protocol_accepts_current_verification_fingerprint(tmp_path):
+    source = write_protocol(tmp_path / "frozen.json", _frozen_protocol_with_current_verification())
+
+    assert loader()(source)["status"] == "frozen"
+
+
+def test_frozen_protocol_rejects_checker_component_drift(tmp_path):
+    payload = _frozen_protocol_with_current_verification()
+    payload["verification"]["components"]["experiments/openevolve/tasks/knn/recheck.py"] = "0" * 64
+    source = write_protocol(tmp_path / "frozen.json", payload)
+
+    with pytest.raises(ValueError, match="fingerprint"):
+        loader()(source)
 
 
 @pytest.mark.parametrize("mutation", [

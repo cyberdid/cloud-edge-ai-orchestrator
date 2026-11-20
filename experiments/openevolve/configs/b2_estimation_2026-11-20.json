@@ -1,6 +1,6 @@
 {
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
-  "status": "draft",
+  "status": "frozen",
   "study_type": "estimation_feasibility",
   "task": "knn",
   "model": "gemma4:12b",
@@ -15,19 +15,93 @@
   "allocation_rng": {
     "algorithm": "Python random.Random",
     "seed": 20261121,
-    "balanced_first_arm_list": ["v1_matched", "v1_matched", "v1_matched", "v2", "v2", "v2"]
+    "balanced_first_arm_list": [
+      "v1_matched",
+      "v1_matched",
+      "v1_matched",
+      "v2",
+      "v2",
+      "v2"
+    ]
   },
   "pairs": [
-    {"pair_id": "P1", "seed": 20261120, "order": ["v2", "v1_matched"]},
-    {"pair_id": "P2", "seed": 20261121, "order": ["v1_matched", "v2"]},
-    {"pair_id": "P3", "seed": 20261122, "order": ["v2", "v1_matched"]},
-    {"pair_id": "P4", "seed": 20261123, "order": ["v1_matched", "v2"]},
-    {"pair_id": "P5", "seed": 20261124, "order": ["v1_matched", "v2"]},
-    {"pair_id": "P6", "seed": 20261125, "order": ["v2", "v1_matched"]}
+    {
+      "pair_id": "P1",
+      "seed": 20261120,
+      "order": [
+        "v2",
+        "v1_matched"
+      ]
+    },
+    {
+      "pair_id": "P2",
+      "seed": 20261121,
+      "order": [
+        "v1_matched",
+        "v2"
+      ]
+    },
+    {
+      "pair_id": "P3",
+      "seed": 20261122,
+      "order": [
+        "v2",
+        "v1_matched"
+      ]
+    },
+    {
+      "pair_id": "P4",
+      "seed": 20261123,
+      "order": [
+        "v1_matched",
+        "v2"
+      ]
+    },
+    {
+      "pair_id": "P5",
+      "seed": 20261124,
+      "order": [
+        "v1_matched",
+        "v2"
+      ]
+    },
+    {
+      "pair_id": "P6",
+      "seed": 20261125,
+      "order": [
+        "v2",
+        "v1_matched"
+      ]
+    }
   ],
   "interpretation": {
     "primary_claim": "descriptive estimation and execution feasibility only",
     "confirmatory": false,
     "allow_confirmatory_p_value": false
+  },
+  "verification": {
+    "components": {
+      "antigravity_hybrid_orchestrator/integrity/oracle.py": "6cbaf4e22e612fb00cd39d55acd0758562ef989feba04ae8e2414b8121a7d8cb",
+      "antigravity_hybrid_orchestrator/runtime/sandbox.py": "352e241ce82f04d491ba8ac01e18742bdb509d53ce26b1d4f930a517495416d2",
+      "experiments/openevolve/candidate_log.py": "0910d219fab75f9bec8c23aa3ddf34db664774d99f640fa4e2ce285e652fe523",
+      "experiments/openevolve/tasks/knn/recheck.py": "29cc1d7d9502cfc84c40dbe6b039cc193a71389e0116e0d0ea84b9dbd4402ad5",
+      "experiments/openevolve/tasks/knn/data.py": "747f564350790542b25475bd9f8955dae25d6ba01cfad08b2f789315d113bedc",
+      "experiments/openevolve/tasks/knn/driver.py": "47946b9b4a2d35a135ae9c8ac1442636808d406e6ada51fbc0dc7a05ac1272f5",
+      "experiments/openevolve/sandbox_exec.py": "859042a74a051110b1676b2193ad00ab05b0b4bfafdd8f4c1501b67d066b1fae",
+      "experiments/openevolve/static_check.py": "e97c3db70042e40662057866591768f4e3141afbaeef4a7857c44668166d5f6c",
+      "experiments/openevolve/tasks/knn/working_evaluator.py": "1367e61f2ea33adeb3bb63c79e3af64ab3c3eeca70831c243f67a4677234c806",
+      "experiments/openevolve/recheck_b2_selected.py": "c07a56182ce981a1c454c8a9d5ebb0e7b3a9c5eca684dcc66bb3f3bf6ba2bdbc",
+      "experiments/openevolve/analyze_b2_estimation.py": "0608711e2de7de49241dfa20965bf3b95edb8e68b9a9bf1b7521cfe8899499f6"
+    },
+    "sha256": "6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08",
+    "docker_image": "antigravity-orion:local",
+    "docker_image_digest": "sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2",
+    "holdout_definition": "experiments/openevolve/tasks/knn/recheck.py::HOLDOUT_SETS",
+    "holdout_seeds": [
+      9001,
+      9002,
+      9003
+    ],
+    "holdout_visibility": "source_visible_fixed"
   }
 }
