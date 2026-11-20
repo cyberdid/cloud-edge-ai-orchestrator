@@ -71,6 +71,20 @@ else:
             except Exception as exc:
                 rows.append({"error": type(exc).__name__ + ": " + str(exc)[:200]})
         result["sets"] = rows
+    elif mode == "working_v1_matched_timed":
+        rows = []
+        for x, qs, k, _ in sets:
+            try:
+                ref_t, (ref_ids, _) = min((_timed(brute_knn, x, qs, k) for _ in range(3)), key=lambda r: r[0])
+                runs = []
+                for _ in range(3):
+                    elapsed, out = _timed(candidate.approximate_knn, x, qs, k)
+                    ids = np.asarray(out[0])
+                    runs.append({"time": elapsed, "ids": ids.tolist()})
+                rows.append({"reference_time": ref_t, "reference_ids": ref_ids.tolist(), "runs": runs})
+            except Exception as exc:
+                rows.append({"error": type(exc).__name__ + ": " + str(exc)[:200]})
+        result["sets"] = rows
     elif mode == "recheck":
         out_fresh, out_sets = [], []
         for x, qs, k, _ in fresh:

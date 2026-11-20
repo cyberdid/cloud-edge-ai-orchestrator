@@ -36,14 +36,15 @@ def gemma_model() -> str:
 
 
 def evaluator_path(task: str, version: str = "v1") -> Path:
-    if version not in {"v1", "v2"}:
+    if version not in {"v1", "v1_matched", "v2"}:
         raise ValueError(f"unknown evaluator version: {version}")
     if task not in TASKS:
         raise ValueError(f"unknown task: {task}")
-    if version == "v2":
+    if version in {"v1_matched", "v2"}:
         if task != "knn":
-            raise ValueError("evaluator v2 is only available for knn")
-        return TASKS[task]["evaluator"].with_name("working_evaluator_v2.py")
+            raise ValueError(f"evaluator {version} is only available for knn")
+        name = "working_evaluator_v2.py" if version == "v2" else "working_evaluator_v1_matched.py"
+        return TASKS[task]["evaluator"].with_name(name)
     return TASKS[task]["evaluator"]
 STUB_DIFFS = {
     "circle_packing": ("    n = 26\n", "    n = 26  # stub\n"),
@@ -134,6 +135,18 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
     num_predict = int(os.environ.get("OE_PILOT_NUM_PREDICT", "2048"))
     spec = TASKS[task]
     selected_evaluator = evaluator_path(task, evaluator_version)
+    evaluator_sha256 = hashlib.sha256(selected_evaluator.read_bytes()).hexdigest()
+    manifest = json.loads(manifest_path.read_text()) if resume and manifest_path.exists() else {}
+    if resume and manifest.get("evaluator_version", evaluator_version) != evaluator_version:
+        raise RuntimeError(
+            f"cannot resume with evaluator {evaluator_version}; existing run used "
+            f"{manifest.get('evaluator_version')}"
+        )
+    previous_evaluator_sha = manifest.get("evaluator_sha256")
+    if resume and previous_evaluator_sha and previous_evaluator_sha != evaluator_sha256:
+        raise RuntimeError("cannot resume because the evaluator content hash changed")
+    if resume and evaluator_version in {"v1_matched", "v2"} and not previous_evaluator_sha:
+        raise RuntimeError("cannot safely resume this evaluator version without its content hash")
     if backends:
         gemma, argon = backends
     elif llm == "stub":
@@ -146,12 +159,6 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
                     start_index=len(_lines(calls_path)), budget=max_iter,
                     on_call_logged=_call_checkpoint_callback())
     os.environ[ENV_VAR] = str(out / "candidates.jsonl")
-    manifest = json.loads(manifest_path.read_text()) if resume and manifest_path.exists() else {}
-    if resume and manifest.get("evaluator_version", evaluator_version) != evaluator_version:
-        raise RuntimeError(
-            f"cannot resume with evaluator {evaluator_version}; existing run used "
-            f"{manifest.get('evaluator_version')}"
-        )
     pause_path = out / PAUSE_FILE
     if pause_path.exists():  # resuming after a quota pause: keep the event, clear the flag
         manifest["quota_pauses"] = manifest.get("quota_pauses", []) + [json.loads(pause_path.read_text())]
@@ -162,6 +169,7 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
         "config_sha256": hashlib.sha256(spec["config"].read_bytes()).hexdigest(),
         "models": {"gemma": gemma_model(), "argon": ARGON_MODEL}, "num_predict": num_predict, "llm": llm,
         "evaluator_version": evaluator_version,
+        "evaluator_sha256": evaluator_sha256,
         "model_digest": os.environ.get("OE_PILOT_MODEL_DIGEST"),
         "protocol_id": os.environ.get("OE_PILOT_PROTOCOL_ID"),
         "protocol_sha256": os.environ.get("OE_PILOT_PROTOCOL_SHA256"),
@@ -211,7 +219,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--llm", choices=("real", "stub"), default="real")
-    parser.add_argument("--evaluator-version", choices=("v1", "v2"), default="v1")
+    parser.add_argument("--evaluator-version", choices=("v1", "v1_matched", "v2"), default="v1")
     args = parser.parse_args()
     manifest = run(args.task, args.arm, args.seed, args.out, args.resume, args.llm,
                    evaluator_version=args.evaluator_version)

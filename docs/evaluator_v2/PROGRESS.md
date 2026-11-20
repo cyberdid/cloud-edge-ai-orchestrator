@@ -8,7 +8,7 @@ Last updated: 2026-11-20
 |---|---|---|
 | A1–A3: manuscript corrections | Complete in `main` commit `0e5f8fb1bb0279dffd656618ff2ab3a0a17f17e8` | Preregistration history, claims, and layout revisions are in that commit. |
 | B1: evaluator V2 feasibility pilot | Complete as a technical feasibility run; top-level GCS state reconciled after runner response loss | V1 and V2 each have a `complete` manifest and exactly 20 contiguous call records (18 `ok`, 2 `truncated`); evaluator/model/seed/protocol/commit match. Raw artifacts are in `gs://oe-colab-scale-0903767759/paper2-v2/b1/`. No active Colab assignment remains. e2-micro checkout is at `bdd38cf20d22e4221bd8ded1ba64b0e2652880cb`; service is inactive and disabled. This is one-seed descriptive evidence, not a confirmatory result. See `DEVIATIONS.md` and `B1_RESULTS.md`. |
-| B2: confirmatory V1/V2 comparison | Design memo prepared; not ready to launch | See `B2_DESIGN.md`. B1 provides no efficacy estimate. The proposed 20-pair budget projects to ~234.6 CU using the crude B1 rate, above the ~111.39 CU currently available above the 100-CU reserve. First build a matched timing control, freeze holdout/power assumptions, and rehearse the watchdog without model calls. |
+| B2: confirmatory V1/V2 comparison | Design memo and matched V1 control implemented; not ready to launch | See `B2_DESIGN.md`. B1 provides no efficacy estimate. The proposed 20-pair budget projects to ~234.6 CU using the crude B1 rate, above the ~111.39 CU currently available above the 100-CU reserve. Remaining gates: no-call runtime parity rehearsal, sealed holdout, power/sample-size plan, and a feasible registered budget. |
 | C: VoiceID external validation | Not started | Design a separate evaluator-validation study; do not transfer private audio or embeddings to cloud compute without a specific data authorization and privacy review. |
 
 ## Frozen B1 feasibility pilot
@@ -28,6 +28,7 @@ Last updated: 2026-11-20
 - The top-level GCS state was stale after both manifests completed because the watchdog did not receive/observe the runner's final response. After verifying both manifests and raw call ledgers, the watchdog service was stopped and the GCS state reconciled to complete with an audit note. No raw run files were edited or regenerated.
 - The frozen feasibility questions about checkpoint continuity and the evaluator implementation are partly supported by these records and offline tests. Because V1 required six runtime starts and the pilot had one seed, no effectiveness, equivalence, or population-level claim follows.
 - After reviewing B1, the runner's terminal-state heartbeat race and watchdog recovery path were patched in source. Focused verification: `uv run pytest -q tests/test_oe_paper2_watchdog.py tests/test_oe_paper2_bootstrap.py` (19 passed), Python compilation for both runner modules, and `git diff --check`. The e2-micro service stays disabled until a separate protocol and run are ready.
+- B2 implementation work adds the `v1_matched` timing control, evaluator code hashes in run manifests, and early refusal of mismatched evaluator content on resume. Focused verification across matched evaluator, V1/V2 evaluator, pilot runner, and watchdog tests: 19 passed, 12 Docker-marked tests skipped; no model calls made.
 
 ## Durability gate for any future run
 

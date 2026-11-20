@@ -70,7 +70,7 @@ Before any B2 call, run a no-model-call cost rehearsal: provision one Colab L4 s
 
 ## 6. Required implementation and verification gates
 
-1. Add matched V1 timing/evaluation path; prove V1-matched and V2 invoke the same timing driver and datasets.
+1. **Implemented in the current working tree:** add `v1_matched` using the same kNN driver, development sets, exact-reference timing, three candidate timings, and score function as V2, while deliberately ignoring reported distances. Add evaluator-content SHA-256 to manifests and refuse unsafe resume after an evaluator-content change. Focused unit tests cover the matched timing payload and distance-agnostic behavior. Before B2 freeze, add a no-model-call Docker rehearsal proving actual runtime parity on saved candidates.
 2. Add explicit selected-program manifest, evaluator/version/source hashes, selection fallback rule, and holdout-check result artifact.
 3. Test fabricated but correctly shaped distances, NaN/Inf, duplicate/out-of-range IDs, valid approximate neighbors with recall below 1, timeout, and no timing after a failed preflight.
 4. Test resume for an interrupted pair, duplicate/missing call indices, mismatched model/protocol hash, and completed-manifest recovery.

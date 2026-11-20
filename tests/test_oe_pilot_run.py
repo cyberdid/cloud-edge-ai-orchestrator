@@ -92,9 +92,12 @@ def test_coroutine_runner_supports_an_existing_event_loop():
 
 def test_evaluator_version_selects_knn_v2_only():
     assert run_pilot.evaluator_path("knn", "v1") == run_pilot.TASKS["knn"]["evaluator"]
+    assert run_pilot.evaluator_path("knn", "v1_matched").name == "working_evaluator_v1_matched.py"
     assert run_pilot.evaluator_path("knn", "v2").name == "working_evaluator_v2.py"
     with pytest.raises(ValueError, match="only available for knn"):
         run_pilot.evaluator_path("circle_packing", "v2")
+    with pytest.raises(ValueError, match="only available for knn"):
+        run_pilot.evaluator_path("circle_packing", "v1_matched")
 
 
 def test_evaluator_version_rejects_unknown_values():
@@ -118,6 +121,20 @@ def test_resume_rejects_a_different_evaluator_version(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="cannot resume with evaluator v2"):
         run_pilot.run("knn", "L", 101, out, resume=True, llm="stub", backends=(stub, stub),
                       evaluator_version="v2")
+
+
+def test_resume_rejects_changed_evaluator_hash_before_router_initialization(tmp_path, monkeypatch):
+    out = tmp_path / "run"
+    out.mkdir()
+    (out / "manifest.json").write_text(json.dumps({
+        "evaluator_version": "v1_matched", "evaluator_sha256": "0" * 64,
+    }))
+    (out / "calls.jsonl").write_text("")
+    monkeypatch.setattr(run_pilot, "Router", lambda *_args, **_kwargs: pytest.fail("router initialized"))
+
+    with pytest.raises(RuntimeError, match="evaluator content hash changed"):
+        run_pilot.run("knn", "L", 101, out, resume=True, llm="stub",
+                      evaluator_version="v1_matched")
 
 
 @real_docker
