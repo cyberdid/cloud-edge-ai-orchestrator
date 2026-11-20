@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T09:20:55Z",
-  "as_of_unix": 1795166455.4683878,
+  "as_of_utc": "2026-11-20T09:26:59Z",
+  "as_of_unix": 1795166819,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,10 +18,10 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 206.46,
-    "observed_pooled_draw_since_launch_cu": 0.47,
-    "remaining_draw_headroom_cu": 69.93,
-    "balance_above_minimum_cu": 106.46,
+    "current_balance_cu": 206.14,
+    "observed_pooled_draw_since_launch_cu": 0.79,
+    "remaining_draw_headroom_cu": 69.61,
+    "balance_above_minimum_cu": 106.14,
     "active_assignments": 2,
     "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone."
   },
@@ -31,17 +31,17 @@
     "current_run": "P1:v2",
     "task_seed": 20261120,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795166348.3948128,
+    "gcs_last_state_update_unix": 1795166776.843187,
     "manifest_status": "running",
-    "model_call_entries_logged_in_current_arm": 5,
+    "model_call_entries_logged_in_current_arm": 9,
     "model_call_status_counts": {
-      "ok": 4,
-      "truncated": 1
+      "ok": 7,
+      "truncated": 2
     },
-    "candidate_records_in_current_arm": 4,
-    "candidate_validity": [true, true, true, true],
-    "candidate_recall": [1.0, 0.7758, 1.0, 0.40206666666666663],
-    "candidate_combined_score": [0.24390858994835815, 0.01590784999699708, 0.11864574965419507, 0.0096573784657733],
+    "candidate_records_in_current_arm": 8,
+    "candidate_validity": [true, true, true, true, true, false, false, true],
+    "candidate_recall": [1.0, 0.7758, 1.0, 0.40206666666666663, 0.14953333333333332, 0.0, 0.0, 0.7587333333333334],
+    "candidate_combined_score": [0.24390858994835815, 0.01590784999699708, 0.11864574965419507, 0.0096573784657733, 0.002532008395556779, 0.0, 0.0, 0.0061962959227857455],
     "selected_artifact_available": false
   },
   "inferential_analysis": "not applicable; this six-pair cohort is descriptive-only"
