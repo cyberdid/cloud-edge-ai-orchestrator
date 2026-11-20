@@ -1,0 +1,47 @@
+{
+  "record_type": "post_hoc_local_independent_recheck",
+  "study": "B1 evaluator V2 feasibility pilot",
+  "scope": "One CPU/Docker re-check of the official V2 selected artifact using the registered study-source checker. This is not a new model run, treatment comparison, or confirmatory observation.",
+  "study_source_commit": "9e45ee6b2cee02e910222c03e84bf680043d43ce",
+  "protocol_sha256": "0a67287d4f2e0bd00dcc9032614efbaa4c8c0bdee17403c27beba59107cbc9c5",
+  "task": "approximate_knn",
+  "condition": "V2",
+  "seed": 20261119,
+  "official_selection": {
+    "artifact": "openevolve/best/best_program.py",
+    "program_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+    "matches_seed_program": true,
+    "selection_generation": 0,
+    "selection_iteration": 0
+  },
+  "checker": {
+    "source_commit": "9e45ee6b2cee02e910222c03e84bf680043d43ce",
+    "driver_sha256": "5b1031beadd2338b2ddc1aacf75f7d41846daac3be74bcfbbbf8d28b1752d05e",
+    "recheck_sha256": "29cc1d7d9502cfc84c40dbe6b039cc193a71389e0116e0d0ea84b9dbd4402ad5",
+    "data_sha256": "747f564350790542b25475bd9f8955dae25d6ba01cfad08b2f789315d113bedc",
+    "oracle_sha256": "6cbaf4e22e612fb00cd39d55acd0758562ef989feba04ae8e2414b8121a7d8cb",
+    "docker_image": "antigravity-orion:local",
+    "docker_image_digest": "sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2"
+  },
+  "result": {
+    "valid": true,
+    "score": 0.19448624638140422,
+    "reasons": [],
+    "holdout_recall": 1.0,
+    "holdout_speed_ratio": 1.133771555684381
+  },
+  "limitations": [
+    "The exact same program hash was selected in V1 and V2; both selected artifacts are the generation-0 seed. This is not evidence of a V2 treatment benefit.",
+    "This was a post-hoc local re-check of one artifact, not a pre-registered B1 endpoint and not an independent replication of the full study.",
+    "Wall-clock score varied across local re-checks of identical code; do not interpret timing differences across these re-checks as an evaluator effect or pool them into B1 run-level scores.",
+    "No GPU, Colab session, model call, or remote run artifact was used or modified for this re-check."
+  ],
+  "recorded_at_utc": "2026-11-20T07:41:49Z",
+  "timing_observations": [
+    {
+      "checker_driver_sha256": "47946b9b4a2d35a135ae9c8ac1442636808d406e6ada51fbc0dc7a05ac1272f5",
+      "score": 0.2516176620248591,
+      "note": "Earlier local re-check of the identical program under the current timing path. Descriptive timing observation only; not pooled with the registered-driver re-check."
+    }
+  ]
+}

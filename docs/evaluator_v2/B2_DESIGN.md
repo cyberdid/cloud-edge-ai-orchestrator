@@ -6,7 +6,7 @@
 
 ## 1. What B1 established
 
-B1 established that both evaluator versions can run for 20 logged Gemma calls and leave resumable artifacts in GCS. It did not estimate an effect: it used one seed, V1 had six runtime starts, and no V2 candidate was recorded as rejected specifically for fabricated distances. It also exposed a watchdog completion-state failure, now corrected in the source and covered by focused tests. B1 must remain a feasibility cohort and must not be pooled into B2's confirmatory estimate.
+B1 established that both evaluator versions can run for 20 logged Gemma calls and leave resumable artifacts in GCS. It did not estimate an effect: it used one seed, V1 had six runtime starts, and no V2 candidate was recorded as rejected specifically for fabricated distances. A post-hoc identity audit found that both arms selected the generation-0 seed; the registered-source re-check found that program valid, so B1 supplies no observed V2 selection benefit. Identical-code local re-checks also yielded variable timing scores, reinforcing the need for the matched timing control below. B1 additionally exposed a watchdog completion-state failure, now corrected in the source and covered by focused tests. B1 must remain a feasibility cohort and must not be pooled into B2's confirmatory estimate. See `B1_RESULTS.md` and `B1_REGISTERED_RECHECK.json`.
 
 ## 2. Research question and bounded claim
 
