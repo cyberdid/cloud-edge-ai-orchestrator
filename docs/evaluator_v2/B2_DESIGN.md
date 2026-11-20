@@ -66,6 +66,18 @@ The B1 account balance fell from 223.12 CU to 211.39 CU for 40 calls across V1/V
 
 This is a rough linear upper-budget scenario, not a Colab quote: shared model downloads, runtime reuse, infrastructure retries, and CU billing make the true cost uncertain. The current observed balance leaves about 111.39 CU above a 100-CU reserve. Therefore 20 pairs do not fit this planning envelope under the observed rate. Do not silently reduce a powered confirmatory sample to six or eight pairs. Either (a) secure/accumulate a preregistered compute budget that covers the powered sample plus contingency, or (b) explicitly change the study to an estimation/feasibility design with appropriately weaker claims.
 
+### Illustrative exact-power scenarios
+
+For the paired binary endpoint, let `p10` be the probability that V1-matched selects an invalid program while V2 does not, and `p01` the reverse. Exact two-sided McNemar power was enumerated by drawing the discordant-pair count `D ~ Binomial(n, p10+p01)`, then `B | D ~ Binomial(D, p10/(p10+p01))`, and applying the exact two-sided binomial test at alpha 0.05. These scenarios are **planning assumptions only**, not estimates from B1 or the earlier paper.
+
+| Assumed p10 | Assumed p01 | Absolute risk reduction | Pairs for at least 80% power | Calls at 40 per pair | Crude CU at B1 rate |
+|---:|---:|---:|---:|---:|---:|
+| 0.12 | 0.05 | 0.07 | 287 | 11,480 | 3,366.5 |
+| 0.20 | 0.05 | 0.15 | 92 | 3,680 | 1,079.2 |
+| 0.25 | 0.05 | 0.20 | 61 | 2,440 | 715.5 |
+
+Even the largest-effect scenario is far above the present approximate 111-CU envelope. Because the discordance assumptions are not yet empirically grounded for this new endpoint, the table is a sensitivity analysis, not a final sample-size recommendation. The current balance cannot support a defensible confirmatory B2 under these scenarios. Accumulate more compute or register an explicitly exploratory estimation study; do not label a small-budget run confirmatory.
+
 Before any B2 call, run a no-model-call cost rehearsal: provision one Colab L4 session, verify that the patched watchdog marks completion and does not duplicate work, execute the evaluator harness on saved candidate programs, and measure compute-unit cost. The rehearsal must use no new LLM calls and be recorded separately from B2.
 
 ## 6. Required implementation and verification gates
