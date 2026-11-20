@@ -68,7 +68,8 @@ def run_stage(stage: str, *, protocol_sha256: str, source_commit: str,
               "colab_session": "paper2-b2-estimation",
               "gcs_prefix": "paper2-v2/b2-estimation-2026-11-20",
               "model_calls": 0, "checkpoint_upload": True, "fresh_runtime_restore": True,
-              "resume_after_watchdog_restart": True, "terminal_state_roundtrip": True,
+              "checkpoint_restore_after_colab_runtime_recreation": True,
+              "terminal_state_roundtrip": True,
               "sentinel_sha256": verified_sha, "verified_unix": time.time()}
     phase_blob.upload_from_string(json.dumps(result, indent=2, sort_keys=True) + "\n",
                                   content_type="application/json")

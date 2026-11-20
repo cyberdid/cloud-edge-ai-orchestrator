@@ -216,7 +216,8 @@ def _require_rehearsal(protocol_sha256: str, source_commit: str) -> None:
     required = {"status": "passed", "protocol_sha256": protocol_sha256,
                 "source_commit": source_commit, "colab_session": SESSION,
                 "gcs_prefix": PREFIX, "model_calls": 0,
-                "resume_after_watchdog_restart": True, "terminal_state_roundtrip": True}
+                "checkpoint_restore_after_colab_runtime_recreation": True,
+                "terminal_state_roundtrip": True}
     if any(evidence.get(key) != value for key, value in required.items()):
         raise RuntimeError("no-call rehearsal evidence does not match this B2 protocol/source")
 

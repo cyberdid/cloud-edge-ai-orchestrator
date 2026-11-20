@@ -132,6 +132,7 @@ def test_no_call_rehearsal_requires_upload_then_restores_sentinel():
     assert restored["status"] == "passed"
     assert restored["model_calls"] == 0
     assert restored["fresh_runtime_restore"] is True
+    assert restored["checkpoint_restore_after_colab_runtime_recreation"] is True
     assert restored["terminal_state_roundtrip"] is True
 
 
