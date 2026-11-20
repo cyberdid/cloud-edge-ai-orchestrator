@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T14:36:33Z",
-  "as_of_unix": 1795185393,
+  "as_of_utc": "2026-11-20T14:57:26Z",
+  "as_of_unix": 1795186646,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,17 +18,17 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 186.73,
-    "observed_pooled_draw_since_launch_cu": 20.2,
-    "remaining_draw_headroom_cu": 50.2,
-    "balance_above_minimum_cu": 86.73,
+    "current_balance_cu": 186.09,
+    "observed_pooled_draw_since_launch_cu": 20.84,
+    "remaining_draw_headroom_cu": 49.56,
+    "balance_above_minimum_cu": 86.09,
     "active_assignments": 1,
     "pooled_usage_rate_cu_per_hour": 1.94,
     "attribution_note": "Only the B2 Colab assignment is currently active. At the observed account rate, the 70.4-CU draw cap is approximately 25.9 hours away; this is a rough projection, not a guarantee."
   },
   "run_progress": {
     "assigned_runs": 12,
-    "completed_runs": 7,
+    "completed_runs": 8,
     "completed_run_ids": [
       "P1:v2",
       "P1:v1_matched",
@@ -36,21 +36,22 @@
       "P2:v2",
       "P3:v2",
       "P3:v1_matched",
-      "P4:v1_matched"
+      "P4:v1_matched",
+      "P4:v2"
     ],
-    "current_run": "P4:v2 (running)",
+    "current_run": "P4:v2 manifest complete; top-level current_run field remains stale at P4:v2 while cohort advances",
     "current_task_seed": 20261123,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795185316.994324,
-    "gcs_state_current_run_field": "P4:v2",
-    "current_arm_manifest_status": "running",
-    "current_arm_model_call_entries": 15,
+    "gcs_last_state_update_unix": 1795186407.607459,
+    "gcs_state_current_run_field": "P4:v2 (stale; included in completed_run_ids)",
+    "current_arm_manifest_status": "complete",
+    "current_arm_model_call_entries": 20,
     "current_arm_call_status_counts": {
-      "ok": 15
+      "ok": 20
     },
-    "current_arm_candidate_records": 13,
+    "current_arm_candidate_records": 18,
     "current_arm_candidate_records_with_boolean_validity": 0,
-    "model_call_entries_total_across_cohort": 155,
+    "model_call_entries_total_across_cohort": 160,
     "measured_mean_intercall_minutes_completed_arms": {
       "P1:v2": 1.3,
       "P1:v1_matched": 1.23,
@@ -60,8 +61,8 @@
       "P3:v2": 2.74,
       "P4:v1_matched": 2.31
     },
-    "rough_remaining_wall_time_hours": "Five arms remain, including P4 V2 in progress. Completed-arm mean call intervals so far range from 1.23 to 2.74 minutes; plan roughly 4–6 hours for execution and handoffs, plus final independent re-check and descriptive analysis. This is an estimate with substantial run-time variability.",
-    "remaining_model_call_entries": 85,
+    "rough_remaining_wall_time_hours": "Four arms remain (P5 and P6, both conditions), followed by final independent re-check and descriptive analysis. The eight completed arms show mean call intervals from 1.23 to 2.85 minutes; plan roughly 3–5 hours for execution and handoffs, plus the re-check and analysis. This is a rough estimate with run-time variability.",
+    "remaining_model_call_entries": 80,
     "completed_pair_P1": {
       "v1_matched": {
         "manifest_status": "complete",
@@ -193,7 +194,30 @@
     "total_truncated_calls_observed": 22,
     "all_truncated_calls_reached_completion_token_limit": true,
     "completion_token_limit": 2048,
-    "independent_recheck": "deferred_until_all_12_arms_finish"
+    "independent_recheck": "deferred_until_all_12_arms_finish",
+    "completed_run_P4_v2": {
+      "manifest_status": "complete",
+      "model_call_entries": 20,
+      "model_call_status_counts": {
+        "ok": 20
+      },
+      "candidate_records": 18,
+      "candidate_records_with_boolean_validity": 0,
+      "selection_status": "recorded",
+      "selection_sha256": "90199c4d522d28cb1cacd4cd66b8c7b547696d7d84fbda800122bb89ed38c7e0",
+      "selection_sha256_matches_checkpoint_5_best_program": true,
+      "selection_program_id": "8769248b-05c1-4bfe-a2af-a520dc629128",
+      "selection_iteration": 2,
+      "selection_working_metrics": {
+        "evaluator_version": "v2",
+        "valid": true,
+        "combined_score": 1.0,
+        "recall": 1.0,
+        "speed_ratio": 0.4354523611390331
+      },
+      "wall_seconds": 3401.44,
+      "mean_intercall_minutes": 2.85
+    }
   },
   "inferential_analysis": "not applicable; this six-pair cohort is descriptive-only"
 }
