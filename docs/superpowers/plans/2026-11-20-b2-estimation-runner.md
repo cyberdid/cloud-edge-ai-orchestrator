@@ -71,9 +71,9 @@
 - Create remotely: `/opt/paper2-b2/` control directory and a dedicated B2 session/config.
 - Evidence: `docs/evaluator_v2/B2_NO_CALL_REHEARSAL.json`.
 
-- [ ] Pin the committed source SHA, create a separate B2 service without stopping or editing `b12-orchestrator.service`, and verify the unit diff before starting it.
-- [ ] Start a fresh B2 Colab runtime with `--dry-run`; verify upload/restore of a sentinel checkpoint, runner resume after a watchdog restart, unchanged call count, and completion reconciliation.
-- [ ] Stop only the B2 rehearsal Colab session; record CU balance before and after, service logs, GCS prefix, SHA values, and all pass/fail checks.
+- [ ] Pin the committed source SHA, install a separate B2 service without stopping or editing `b12-orchestrator.service`, and verify the unit diff before starting it.
+- [x] Start a fresh B2 Colab runtime with model calls disabled; verify GCS sentinel upload, runtime stop/recreation/restore, and a synthetic terminal-state roundtrip. Runner resume without replaying completed runs is covered by the focused test.
+- [x] Stop only the B2 rehearsal Colab session; record CU balance before and after, GCS prefix, SHA values, and pass/fail checks in `docs/evaluator_v2/B2_NO_CALL_REHEARSAL.json`. The detached systemd/laptop-disconnect test is still pending.
 - [ ] Proceed to model calls only if the rehearsal passes and the shared account remains above the 100-CU reserve with the 70.4-CU aggregate cap still available.
 
 ### Task 5: Freeze and launch the six-pair estimation cohort

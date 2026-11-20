@@ -1,0 +1,37 @@
+{
+  "study": "Paper II B2 estimation feasibility",
+  "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
+  "protocol_status_at_rehearsal": "draft",
+  "protocol_sha256": "757f8c75853497bf50e1d21fa5110c25ec12ed5690a076bc5b46e6d1dc083c69",
+  "source_commit": "34d663e2992876a00c179e79adbbc82886797a32",
+  "status": "passed",
+  "verified_at_utc": "2026-11-20 08:35 UTC",
+  "colab_session": "paper2-b2-estimation",
+  "gcs_bucket": "oe-colab-scale-0903767759",
+  "gcs_prefix": "paper2-v2/b2-estimation-2026-11-20",
+  "rehearsal_prefix": "paper2-v2/b2-estimation-2026-11-20/no-call-rehearsal/rehearsal-1795163650",
+  "checks": {
+    "checkpoint_upload": true,
+    "fresh_colab_runtime_created_after_stop": true,
+    "checkpoint_restored_from_gcs": true,
+    "terminal_state_roundtrip": true,
+    "model_calls": 0,
+    "b2_session_stopped_after_rehearsal": true,
+    "preexisting_colab_assignment_left_untouched": true,
+    "systemd_detached_laptop_test": false
+  },
+  "compute_units": {
+    "balance_before": 208.65,
+    "balance_after": 208.49,
+    "observed_account_draw": 0.16,
+    "remaining_reserve_floor": 100.0,
+    "planned_b2_draw_cap": 70.4
+  },
+  "sentinel_sha256": "de2ea0bdd457c3125ce67e114f4b31b24cc80a3ad9f211a2e28368f5ad0d9317",
+  "local_verification": {
+    "focused_tests": 23,
+    "result": "passed",
+    "resume_test": "test_runner_resumes_only_incomplete_arm_without_replaying_completed_runs"
+  },
+  "interpretation": "This validates GCS checkpoint persistence across a Colab runtime recreation and the synthetic terminal-state roundtrip without model calls. It does not prove the systemd service survives laptop disconnect; the B2 service has not yet been installed or started. The protocol remains a draft, so this record is not a launch authorization."
+}
