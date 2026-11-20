@@ -172,3 +172,13 @@ def test_b2_systemd_unit_starts_watchdog_as_a_repo_module():
     assert "WorkingDirectory=/opt/paper2-b2/repo" in unit
     assert ("ExecStart=/opt/oe-watchdog/bin/python -m "
             "experiments.openevolve.colab.paper2_b2_watchdog --live") in unit
+
+
+def test_b2_systemd_start_limit_is_declared_in_unit_section():
+    unit = (Path(__file__).parents[1] / "scripts/colab/paper2-b2-estimation.service").read_text()
+    unit_section, service_section = unit.split("[Service]", 1)
+
+    assert "StartLimitIntervalSec=86400" in unit_section
+    assert "StartLimitBurst=24" in unit_section
+    assert "StartLimitIntervalSec" not in service_section
+    assert "StartLimitBurst" not in service_section
