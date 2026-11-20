@@ -29,7 +29,7 @@ From the repository root, with Python, Matplotlib, NumPy, SciPy and Tectonic ava
 bash scripts/paper_ii/build.sh
 ```
 
-The command first rebuilds `results/revision_metrics.json` from committed run inventories, CSV summaries and serial re-checks, regenerates both audit and manuscript figures, then compiles the English and Ukrainian articles. It makes no model calls, network requests or sandbox calls and starts no benchmark. Tectonic intermediates are written under `tmp/pdfs/paper-ii/`.
+The command first rebuilds `results/revision_metrics.json` from committed run inventories, CSV summaries and serial re-checks, regenerates both audit and manuscript figures, then compiles the English and Ukrainian articles. It refreshes `SHA256SUMS` from its existing file list and verifies the finished package. It makes no model calls, network requests or sandbox calls and starts no benchmark. Tectonic intermediates are written under `tmp/pdfs/paper-ii/`.
 
 The immutable experimental source snapshot used for the underlying run-level artifacts is commit `57a55d3d23d6c7c3dd7be3abfc1a0d9c758fc6b5`. This manuscript revision and its additional selection audit are distributed on the repository's `main` branch. The source commit and amendment chronology are identified in the manuscript; do not treat the later audit files as part of the earlier snapshot.
 

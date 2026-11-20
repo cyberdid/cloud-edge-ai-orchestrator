@@ -65,3 +65,10 @@
 - This revision does not create new experimental evidence. The additional analyses are reconstructed from public machine-readable summaries and serial re-check artifacts; the long-run best-valid values are available only to three decimal places.
 - There are two bounded tasks, small seed counts, a partially completed LC campaign, and post hoc inference. The findings do not establish a general scaling law, a causal benefit of cloud assistance, or performance on real repository bugs.
 - Full raw run directories and complete model-call traces remain in separate archives, outside this Git snapshot.
+
+## 2026-11-20 reproducible-build check
+
+- Rebuilt the metrics, figures, and both PDFs with `bash scripts/paper_ii/build.sh`; the reported metrics matched the committed revision JSON.
+- Both PDFs contain 13 A4 pages. Extracted text matches the prior revision byte-for-byte after `pdftotext -layout`; rendered contact sheets and both Evidence Map pages were inspected. No clipped text, overlap, or misplaced appendix table was found.
+- The build reported non-fatal Tectonic `Underfull \\hbox` and auxiliary-file consistency warnings. The generated PDFs were still readable and had the same extracted text. These layout warnings remain a minor presentation cleanup item.
+- Updated the build script to refresh and verify `SHA256SUMS` after generation, because PDF and vector-figure metadata can vary across builds even when the manuscript text is unchanged. The build performs this refresh without model, network, benchmark, or sandbox calls.
