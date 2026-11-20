@@ -8,7 +8,7 @@ Last updated: 2026-11-20
 |---|---|---|
 | A1–A3: manuscript corrections | Complete in `main` commit `0e5f8fb1bb0279dffd656618ff2ab3a0a17f17e8` | Preregistration history, claims, and layout revisions are in that commit. |
 | B1: evaluator V2 feasibility pilot | Complete as a technical feasibility run; top-level GCS state reconciled after runner response loss | V1 and V2 each have a `complete` manifest and exactly 20 contiguous call records (18 `ok`, 2 `truncated`); evaluator/model/seed/protocol/commit match. Raw artifacts are in `gs://oe-colab-scale-0903767759/paper2-v2/b1/`. No active Colab assignment remains. This is one-seed descriptive evidence, not a confirmatory result. See `DEVIATIONS.md` and `B1_RESULTS.md`. |
-| B2: confirmatory V1/V2 comparison | Protocol design not started | Use B1 only to validate feasibility. The watchdog terminal-write race/recovery path has now been patched and covered by focused tests; the service remains disabled and no new Colab session is running. Freeze a separate protocol, sample size, and budget before any confirmatory model calls. |
+| B2: confirmatory V1/V2 comparison | Design memo prepared; not ready to launch | See `B2_DESIGN.md`. B1 provides no efficacy estimate. The proposed 20-pair budget projects to ~234.6 CU using the crude B1 rate, above the ~111.39 CU currently available above the 100-CU reserve. First build a matched timing control, freeze holdout/power assumptions, and rehearse the watchdog without model calls. |
 | C: VoiceID external validation | Not started | Design a separate evaluator-validation study; do not transfer private audio or embeddings to cloud compute without a specific data authorization and privacy review. |
 
 ## Frozen B1 feasibility pilot
