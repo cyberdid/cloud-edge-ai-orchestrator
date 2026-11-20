@@ -1,6 +1,6 @@
 # B2 estimation study — frozen registration and launch gates
 
-**Status:** protocol frozen; no B2 model call has been made. This defines the lower-cost, estimation-only option for the requested B2 launch. It does not replace the confirmatory design in `B2_DESIGN.md`.
+**Status:** frozen estimation cohort is running independently on the e2-micro VM. The B2 systemd service is enabled; systemd currently reports `activating` while its supervisor is running, and the dedicated Colab session is busy. The current run state is recorded in `B2_LIVE_STATUS_2026-11-20.json`. This defines the lower-cost, estimation-only option and does not replace the confirmatory design in `B2_DESIGN.md`.
 
 - Frozen protocol SHA-256: `8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719`
 - Checker fingerprint SHA-256: `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`
@@ -11,7 +11,7 @@
 
 The 715.5-CU figure is a planning scenario for 61 paired seeds, assuming 25% of pairs favor V2 only and 5% favor V1-matched only. That scenario targets at least 80% power for the exact paired-binary test, uses 40 model calls per pair, and applies B1's rough rate of 0.293 CU per call. Those discordance probabilities are illustrative assumptions, not estimates from B1.
 
-This draft instead proposes a small **estimation/feasibility cohort**, with weaker claims and no confirmatory hypothesis test.
+The frozen protocol instead runs a small **estimation/feasibility cohort**, with descriptive outcomes and no confirmatory hypothesis test.
 
 ## Proposed frozen design
 
@@ -19,7 +19,7 @@ This draft instead proposes a small **estimation/feasibility cohort**, with weak
 - **Pairs:** 6 preregistered task-seed pairs.
 - **Calls:** 20 per arm per pair; 40 per pair; maximum 240 logged Gemma calls.
 - **Conditions:** V1-matched and V2, same candidate sandbox, prompts, model digest, seed program, and call budget.
-- **Order:** the current draft config fixes six seeds (`20261120`–`20261125`) and a balanced order (P1 V2-first, P2 V1-matched-first, P3 V2-first, P4 V1-matched-first, P5 V1-matched-first, P6 V2-first). This is saved in `experiments/openevolve/configs/b2_estimation_2026-11-20.json`; the protocol is still a draft until source, checker, holdout, and watchdog hashes are frozen.
+- **Order:** the frozen config fixes six seeds (`20261120`–`20261125`) and balanced order (P1 V2-first, P2 V1-matched-first, P3 V2-first, P4 V1-matched-first, P5 V1-matched-first, P6 V2-first). The protocol, checker, visible holdout, and re-check image are fingerprinted in `experiments/openevolve/configs/b2_estimation_2026-11-20.json`.
 - **Model:** local Ollama Gemma 4 12B, frozen by immutable digest; no cloud-model fallback.
 - **Primary descriptive outcome:** per-arm count and proportion of selected artifacts that fail the independent holdout correctness check. Publish the full six-pair table and the paired 2×2 table; do not claim a statistically established treatment effect or report a confirmatory p-value.
 - **Secondary descriptive outcomes:** selected holdout score, false-improvement rate with explicit candidate and hash denominators, gate rejection reasons, wall time, model tokens, GPU time, and Colab CU.
@@ -30,25 +30,26 @@ This draft instead proposes a small **estimation/feasibility cohort**, with weak
 
 ## Compute envelope
 
-At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded planning estimate: 70.4 CU). The latest read-only balance check on 2026-11-20 was 208.49 CU; one pre-existing L4 assignment remained active, and the 100-CU reserve leaves 108.49 CU of total headroom. A 70.4-CU draw leaves 38.09 CU for concurrent usage and cost uncertainty. The no-call rehearsal itself used 0.16 CU by the account meter. The account meter is shared, so this is a pooled budget—not a precise B2-only cost. Re-read balance immediately before launch and stop if the projected budget no longer fits. The estimate is not a guarantee or a vendor quote.
+At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded planning estimate: 70.4 CU). The actual launch snapshot was 206.93 CU with one pre-existing assignment active; the 70.4-CU cap therefore left 36.53 CU above the 100-CU reserve for concurrent account use and estimation error. The latest snapshot in `B2_LIVE_STATUS_2026-11-20.json` is 206.46 CU with two active assignments, an observed pooled change of 0.47 CU since launch. The account meter is shared, so no exact B2-only cost can be inferred. The estimate is not a guarantee or a vendor quote.
 
 ## Required launch gates
 
 1. Keep the existing B-12 project and its active `b12eval` L4 assignment untouched. The e2-micro read-only check currently reports both `b12-orchestrator.service` and the Paper II B1 watchdog as inactive; the account CLI still reports one active L4 assignment. Do not infer that this assignment is B2 or try to attach to it.
 2. **Completed in the frozen protocol:** exact six-seed list, balanced arm order, protocol JSON, selected-artifact re-check script, checker component fingerprint, source-visible holdout definition, and Docker image digest.
 3. Implement a B2-specific runner and watchdog with a separate Colab session name, GCS prefix, state file, and budget counter. Do not reuse B1's hard-coded `paper2-v2/b1` prefix or the active B-12 session.
-4. Run the B2 watchdog and persistence path in a fresh Colab runtime with model calls disabled. The GCS sentinel upload, stop/recreate/restore, and terminal-state roundtrip passed; a detached systemd `--rehearse` invocation also completed successfully with zero model calls and the B2 session stopped afterward. Repeat this no-call rehearsal for the exact frozen protocol/source hashes before live execution.
-5. Re-check global balance and ensure the 100-CU reserve can be maintained even if the existing active assignment continues.
-6. Only after the exact-hash rehearsal, persistent service setup, and immediate balance check, start the 6-pair estimation cohort. If any gate fails, run no model calls.
+4. **Passed for exact frozen hashes:** the detached systemd no-call rehearsal recreated the Colab runtime, restored the GCS sentinel, and round-tripped terminal state; the B2 session was stopped afterward. Evidence is in `B2_FROZEN_NO_CALL_REHEARSAL.json`.
+5. **Passed at launch:** balance was 206.93 CU with one other assignment; the watchdog enforces the 70.4-CU aggregate draw cap and 100-CU floor.
+6. **Started:** the persistent systemd unit was enabled and launched the six-pair cohort. It runs independently of the laptop and resumes from its dedicated GCS checkpoints. Do not stop the service or B2 session while it is running; inspect the GCS state and systemd unit for progress.
 
 ## Implementation checkpoint — 2026-11-20
 
-- Added the resumable B2 runner, isolated watchdog, Colab entrypoint, and systemd unit template. The runner refuses live calls while this JSON remains `draft`; its dry-run reports 240 assigned calls and zero model calls.
+- Added the resumable B2 runner, isolated watchdog, Colab entrypoint, and systemd unit template. The runner refuses live calls unless this JSON is `frozen`; the dry-run reports 240 assigned calls and zero model calls.
 - Run manifests must match the pinned source Git SHA, protocol SHA, model digest, evaluator version, seed, and exact 20-call ledger. Resume skips validated completed arms and continues only a matching incomplete arm.
 - The watchdog uses only `paper2-b2-estimation` and `paper2-v2/b2-estimation-2026-11-20`; account-wide guard is 70.4 CU from a persisted fresh start snapshot or 100 CU remaining, whichever comes first.
 - Local focused verification: 35 B2 tests passed; Python compilation, whitespace check, runner/watchdog no-call dry-runs, and systemd unit contract checks passed. The selected-artifact re-check retains interrupted runs as incomplete, and the summary is descriptive-only with no p-value.
-- No-call GCS persistence rehearsal passed on 2026-11-20 with source `34d663e2992876a00c179e79adbbc82886797a32`; evidence is in `B2_NO_CALL_REHEARSAL.json`. The Colab runtime was stopped and recreated, the sentinel restored from the dedicated prefix, the synthetic terminal-state record round-tripped, and the B2 session was stopped. The measured account draw was 0.16 CU; the pre-existing L4 assignment remained untouched.
-- Still not live-launch-ready: repeat the no-call rehearsal for the frozen source/protocol hashes, install the systemd unit and pinned source environment on the VM, and pass the immediate balance gate. The detached systemd pattern has been demonstrated on the VM, but no persistent B2 service has been started. No B2 model call has been made.
+- Exact-hash no-call GCS rehearsal passed on 2026-11-20 with source `3e603e426930215838ce9a2aa475959bb241ff87`; evidence is in `B2_FROZEN_NO_CALL_REHEARSAL.json`. The account meter's immediate reading lagged its follow-up by 0.33 pooled CU, which is not attributable to B2 alone.
+- Live launch started on the e2-micro VM with launch balance 206.93 CU. At the latest snapshot, B2 was running `P1:v2` (seed `20261120`): three successful model calls and three evaluated candidate records were logged, all marked valid, with recall from 0.7758 to 1.0. No arm was complete (0 of 12), and no selected artifact was available. These are intermediate search metrics, not a selected-program result.
+- The current main branch also contains a systemd unit fix placing the restart limiter in the correct section; it was reloaded without interrupting the active run. The execution source remains pinned to `3e603e426930215838ce9a2aa475959bb241ff87`.
 
 ## Interpretation boundary
 

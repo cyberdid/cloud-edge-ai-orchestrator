@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
+  "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
+  "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
+  "systemd_transient_unit": "paper2-b2-frozen-rehearsal-3e603e4b.service",
+  "colab_session": "paper2-b2-estimation",
+  "gcs_prefix": "paper2-v2/b2-estimation-2026-11-20",
+  "gcs_rehearsal_run_id": "rehearsal-1795164791",
+  "sentinel_sha256": "79c8fe3af39a4e289f6208b263e6454be27b7c06f51cceda01c6b540db82bbd0",
+  "checkpoint_upload": true,
+  "restore_after_colab_runtime_recreation": true,
+  "terminal_state_roundtrip": true,
+  "model_calls": 0,
+  "reported_meter_reading": {
+    "before_cu": 207.26,
+    "immediate_after_cu": 207.26,
+    "immediate_reported_draw_cu": 0.0,
+    "followup_balance_cu": 206.93,
+    "followup_pooled_change_cu": 0.33,
+    "attribution": "Shared account meter; the follow-up change cannot be assigned to B2 alone."
+  },
+  "initial_frozen_attempt": {
+    "status": "aborted_without_model_calls",
+    "reason": "Colab exec did not report execution for more than four minutes; no GCS sentinel was present. Only the B2 session was stopped."
+  }
+}
