@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T14:07:00Z",
-  "as_of_unix": 1795183620,
+  "as_of_utc": "2026-11-20T14:17:26Z",
+  "as_of_unix": 1795184246,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,13 +18,13 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 188.02,
-    "observed_pooled_draw_since_launch_cu": 18.91,
-    "remaining_draw_headroom_cu": 51.49,
-    "balance_above_minimum_cu": 88.02,
-    "active_assignments": 2,
-    "pooled_usage_rate_cu_per_hour": 3.88,
-    "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone. At the observed pooled rate, the draw cap is approximately 13.3 hours away, but this is not a guaranteed forecast."
+    "current_balance_cu": 187.38,
+    "observed_pooled_draw_since_launch_cu": 19.55,
+    "remaining_draw_headroom_cu": 50.85,
+    "balance_above_minimum_cu": 87.38,
+    "active_assignments": 1,
+    "pooled_usage_rate_cu_per_hour": 1.94,
+    "attribution_note": "Only the B2 Colab assignment is currently active. At the observed account rate, the 70.4-CU draw cap is approximately 26 hours away; this is a rough projection, not a guarantee."
   },
   "run_progress": {
     "assigned_runs": 12,
@@ -41,16 +41,16 @@
     "current_run": "P4:v2 (running)",
     "current_task_seed": 20261123,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795183478.452467,
+    "gcs_last_state_update_unix": 1795184131.430856,
     "gcs_state_current_run_field": "P4:v2",
     "current_arm_manifest_status": "running",
-    "current_arm_model_call_entries": 4,
+    "current_arm_model_call_entries": 8,
     "current_arm_call_status_counts": {
-      "ok": 4
+      "ok": 8
     },
-    "current_arm_candidate_records": 4,
+    "current_arm_candidate_records": 8,
     "current_arm_candidate_records_with_boolean_validity": 0,
-    "model_call_entries_total_across_cohort": 144,
+    "model_call_entries_total_across_cohort": 148,
     "measured_mean_intercall_minutes_completed_arms": {
       "P1:v2": 1.3,
       "P1:v1_matched": 1.23,
@@ -60,8 +60,8 @@
       "P3:v2": 2.74,
       "P4:v1_matched": 2.31
     },
-    "rough_remaining_wall_time_hours": "Five arms remain, including P4 V2 in progress. The seven completed arms have mean call intervals from 1.23 to 2.74 minutes; plan roughly 4–6 hours for execution and handoffs, plus final independent re-check and descriptive analysis. This is a rough estimate with substantial run-time variability.",
-    "remaining_model_call_entries": 96,
+    "rough_remaining_wall_time_hours": "Five arms remain, including P4 V2 in progress. Completed-arm mean call intervals so far range from 1.23 to 2.74 minutes; plan roughly 4–6 hours for execution and handoffs, plus final independent re-check and descriptive analysis. This is an estimate with substantial run-time variability.",
+    "remaining_model_call_entries": 92,
     "completed_pair_P1": {
       "v1_matched": {
         "manifest_status": "complete",
