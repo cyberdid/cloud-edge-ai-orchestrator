@@ -1,5 +1,6 @@
 """OpenEvolve pilot: post-hoc attribution, re-check summary and aggregation (no Docker)."""
 import json
+import hashlib
 
 import pytest
 
@@ -14,7 +15,7 @@ def make_run(tmp_path, candidates, calls=None, task="circle_packing", arm="L", s
         {"call_index": i, "model": "gemma", "ts_start": 10.0 * (i + 1), "latency_s": 2.0,
          "prompt_tokens": 5, "completion_tokens": 7, "status": "ok"} for i in range(len(candidates) - 1)]
     (run / "calls.jsonl").write_text("".join(json.dumps(c) + "\n" for c in calls))
-    rows = [dict(c, code_sha256=c["code"] * 4) for c in candidates]
+    rows = [dict(c, code_sha256=hashlib.sha256(c["code"].encode()).hexdigest()) for c in candidates]
     (run / "candidates.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     (run / "manifest.json").write_text(json.dumps({"task": task, "arm": arm, "seed": seed, "status": "complete"}))
     return run
@@ -50,6 +51,37 @@ def test_shipped_false_falls_back_to_seed(tmp_path):
     assert summary["shipped_is_false"] is True
     assert summary["shipped_verified_score"] == summary["seed_score"] == 0.3
     assert summary["best_verified_score"] == 0.5
+
+
+def test_official_openevolve_selection_overrides_candidate_log_max(tmp_path):
+    run = make_run(tmp_path, [cand("s", 0.3, 1), cand("official", 0.6, 11), cand("log-max", 0.9, 21)])
+    selected_hash = hashlib.sha256(b"official").hexdigest()
+    manifest = json.loads((run / "manifest.json").read_text())
+    manifest["selection"] = {"status": "recorded", "source": "openevolve_best",
+                             "code_sha256": selected_hash}
+    (run / "manifest.json").write_text(json.dumps(manifest))
+    table = {"s": (True, 0.3), "official": (False, 0.0), "log-max": (True, 0.9)}
+
+    summary = recheck_run(run, recheck=fake_recheck(table))
+
+    assert summary["shipped_working_score"] == 0.6
+    assert summary["shipped_is_false"] is True
+    assert summary["shipped_verified_score"] == 0.3
+    assert summary["selection_source"] == "openevolve_best"
+
+
+@pytest.mark.parametrize("selection", [
+    {"status": "recorded", "source": "openevolve_best", "code_sha256": "missing"},
+    {"status": "missing", "source": "openevolve_best"},
+])
+def test_invalid_official_selection_does_not_silently_fall_back(tmp_path, selection):
+    run = make_run(tmp_path, [cand("s", 0.3, 1), cand("a", 0.9, 11)])
+    manifest = json.loads((run / "manifest.json").read_text())
+    manifest["selection"] = selection
+    (run / "manifest.json").write_text(json.dumps(manifest))
+
+    with pytest.raises(ValueError, match="selection"):
+        recheck_run(run, recheck=fake_recheck({"s": (True, 0.3), "a": (True, 0.9)}))
 
 
 def test_false_improvement_rate(tmp_path):

@@ -70,6 +70,27 @@ def _latest_checkpoint(output_dir: Path) -> tuple[str | None, int]:
     return str(path), iteration
 
 
+def _selection_artifact(out: Path, arm: str) -> dict | None:
+    """Capture the program actually promoted by the runner as the run's selection."""
+    if arm == "B":
+        return None  # arm B has its own selection rule and is outside the B2 endpoint
+    program = out / "openevolve" / "best" / "best_program.py"
+    info_path = out / "openevolve" / "best" / "best_program_info.json"
+    if not program.is_file() or not info_path.is_file():
+        return {"status": "missing", "source": "openevolve_best",
+                "expected_path": "openevolve/best/best_program.py"}
+    code = program.read_text()
+    info = json.loads(info_path.read_text())
+    return {
+        "status": "recorded", "source": "openevolve_best",
+        "path": "openevolve/best/best_program.py",
+        "info_path": "openevolve/best/best_program_info.json",
+        "code_sha256": hashlib.sha256(code.encode()).hexdigest(),
+        "program_id": info.get("id"), "iteration": info.get("iteration"),
+        "generation": info.get("generation"), "working_metrics": info.get("metrics", {}),
+    }
+
+
 def _router_process(router: Router, ports) -> None:
     server = serve(router, 0)
     ports.put(server.server_address[1])
@@ -201,6 +222,9 @@ def run(task: str, arm: str, seed: int, out: Path, resume: bool, llm: str = "rea
             server.terminate()
             server.join(10)
     calls = _lines(calls_path)
+    selection = _selection_artifact(out, arm)
+    if selection is not None:
+        manifest["selection"] = selection
     manifest.update({
         "status": "paused_quota" if pause_path.exists() else ("complete" if len(calls) >= max_iter else "incomplete"),
         "wall_s": manifest.get("wall_s", 0.0) + time.time() - started,

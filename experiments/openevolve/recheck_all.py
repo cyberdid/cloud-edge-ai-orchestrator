@@ -66,7 +66,23 @@ def recheck_run(run_dir: Path, recheck: Recheck | None = None) -> dict:
     seed_working, seed_verified = seed["working"], _verified(seed["recheck"], 0.0)
     above = [c for c in candidates if c["call_index"] is not None and c["working"] > seed_working]
     false = [c for c in above if not c["recheck"]["valid"] or c["recheck"]["score"] <= seed_verified]
-    shipped = max(candidates, key=lambda c: c["working"])  # max() keeps the earliest on ties
+    selection = manifest.get("selection")
+    if selection is not None:
+        if selection.get("status") != "recorded" or not selection.get("code_sha256"):
+            raise ValueError(f"selection is not recorded for {run_dir}")
+        selected = [c for c in candidates if c["code_sha256"] == selection["code_sha256"]]
+        if not selected:
+            raise ValueError(f"official selection hash is absent from candidates for {run_dir}")
+        shipped = selected[-1]
+        official_score = selection.get("working_metrics", {}).get("combined_score")
+        if official_score is not None:
+            shipped = dict(shipped, working=float(official_score))
+        selection_source = selection.get("source", "unknown")
+    else:
+        # Legacy runs predate explicit selection artifacts; retain their historical
+        # candidate-log-max interpretation and label it in the summary.
+        shipped = max(candidates, key=lambda c: c["working"])
+        selection_source = "candidate_log_max_legacy"
 
     curve, best = [], seed
     by_call: dict[int, list[dict]] = {}
@@ -86,7 +102,11 @@ def recheck_run(run_dir: Path, recheck: Recheck | None = None) -> dict:
         "seed_working_score": seed_working, "seed_score": seed_verified,
         "shipped_working_score": shipped["working"],
         "shipped_verified_score": _verified(shipped["recheck"], seed_verified),
-        "shipped_is_false": any(c is shipped for c in false),
+        "shipped_is_false": bool(
+            shipped["working"] > seed_working
+            and (not shipped["recheck"]["valid"] or shipped["recheck"]["score"] <= seed_verified)
+        ),
+        "selection_source": selection_source,
         "best_verified_score": max([seed_verified] + [c["recheck"]["score"] for c in candidates if c["recheck"]["valid"]]),
         "above_seed_count": len(above), "false_improvements": len(false),
         "false_improvement_rate": len(false) / len(above) if above else 0.0,
