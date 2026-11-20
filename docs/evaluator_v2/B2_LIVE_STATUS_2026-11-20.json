@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T13:52:28Z",
-  "as_of_unix": 1795182748,
+  "as_of_utc": "2026-11-20T14:07:00Z",
+  "as_of_unix": 1795183620,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,37 +18,58 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 189.00,
-    "observed_pooled_draw_since_launch_cu": 17.93,
-    "remaining_draw_headroom_cu": 52.47,
-    "balance_above_minimum_cu": 89.00,
+    "current_balance_cu": 188.02,
+    "observed_pooled_draw_since_launch_cu": 18.91,
+    "remaining_draw_headroom_cu": 51.49,
+    "balance_above_minimum_cu": 88.02,
     "active_assignments": 2,
     "pooled_usage_rate_cu_per_hour": 3.88,
-    "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone. At the observed pooled rate, the draw cap is approximately 13.5 hours away, but this is not a guaranteed forecast."
+    "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone. At the observed pooled rate, the draw cap is approximately 13.3 hours away, but this is not a guaranteed forecast."
   },
   "run_progress": {
     "assigned_runs": 12,
     "completed_runs": 7,
-    "completed_run_ids": ["P1:v2", "P1:v1_matched", "P2:v1_matched", "P2:v2", "P3:v2", "P3:v1_matched", "P4:v1_matched"],
-    "current_run": "P4:v2 (scheduled; no run manifest yet)",
+    "completed_run_ids": [
+      "P1:v2",
+      "P1:v1_matched",
+      "P2:v1_matched",
+      "P2:v2",
+      "P3:v2",
+      "P3:v1_matched",
+      "P4:v1_matched"
+    ],
+    "current_run": "P4:v2 (running)",
     "current_task_seed": 20261123,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795182679.1743388,
-    "gcs_state_current_run_field": "P4:v1_matched (stale; included in completed_run_ids)",
-    "current_arm_manifest_status": "not_initialized",
-    "current_arm_model_call_entries": 0,
-    "current_arm_call_status_counts": {},
-    "current_arm_candidate_records": 0,
+    "gcs_last_state_update_unix": 1795183478.452467,
+    "gcs_state_current_run_field": "P4:v2",
+    "current_arm_manifest_status": "running",
+    "current_arm_model_call_entries": 4,
+    "current_arm_call_status_counts": {
+      "ok": 4
+    },
+    "current_arm_candidate_records": 4,
     "current_arm_candidate_records_with_boolean_validity": 0,
-    "model_call_entries_total_across_cohort": 140,
-    "measured_mean_intercall_minutes_completed_arms": {"P1:v2": 1.30, "P1:v1_matched": 1.23, "P2:v1_matched": 1.76, "P2:v2": 1.76, "P3:v1_matched": 2.00, "P3:v2": 2.74, "P4:v1_matched": 2.31},
-    "rough_remaining_wall_time_hours": "Five arms remain. The seven completed arms show mean call intervals from 1.23 to 2.74 minutes; plan roughly 4-6 hours for remaining execution and handoffs, plus the final independent re-check and descriptive analysis. This is a rough estimate with substantial run-time variability.",
-    "remaining_model_call_entries": 100,
+    "model_call_entries_total_across_cohort": 144,
+    "measured_mean_intercall_minutes_completed_arms": {
+      "P1:v2": 1.3,
+      "P1:v1_matched": 1.23,
+      "P2:v1_matched": 1.76,
+      "P2:v2": 1.76,
+      "P3:v1_matched": 2.0,
+      "P3:v2": 2.74,
+      "P4:v1_matched": 2.31
+    },
+    "rough_remaining_wall_time_hours": "Five arms remain, including P4 V2 in progress. The seven completed arms have mean call intervals from 1.23 to 2.74 minutes; plan roughly 4–6 hours for execution and handoffs, plus final independent re-check and descriptive analysis. This is a rough estimate with substantial run-time variability.",
+    "remaining_model_call_entries": 96,
     "completed_pair_P1": {
       "v1_matched": {
         "manifest_status": "complete",
         "model_call_entries": 20,
-        "model_call_status_counts": {"ok": 15, "truncated": 5},
+        "model_call_status_counts": {
+          "ok": 15,
+          "truncated": 5
+        },
         "candidate_records": 10,
         "candidate_records_with_validity_true": 0,
         "candidate_records_with_validity_false": 0,
@@ -60,7 +81,10 @@
       "v2": {
         "manifest_status": "complete",
         "model_call_entries": 20,
-        "model_call_status_counts": {"ok": 16, "truncated": 4},
+        "model_call_status_counts": {
+          "ok": 16,
+          "truncated": 4
+        },
         "candidate_records": 18,
         "candidate_records_with_validity_true": 12,
         "candidate_records_with_validity_false": 6,
@@ -75,7 +99,10 @@
     "completed_arm_P2_v1_matched": {
       "manifest_status": "complete",
       "model_call_entries": 20,
-      "model_call_status_counts": {"ok": 17, "truncated": 3},
+      "model_call_status_counts": {
+        "ok": 17,
+        "truncated": 3
+      },
       "candidate_records": 13,
       "candidate_records_with_boolean_validity": 0,
       "selection_status": "recorded",
@@ -88,7 +115,10 @@
     "completed_arm_P2_v2": {
       "manifest_status": "complete",
       "model_call_entries": 20,
-      "model_call_status_counts": {"ok": 17, "truncated": 3},
+      "model_call_status_counts": {
+        "ok": 17,
+        "truncated": 3
+      },
       "candidate_records": 9,
       "candidate_records_with_boolean_validity": 0,
       "selection_status": "recorded",
@@ -101,7 +131,10 @@
     "completed_arm_P3_v2": {
       "manifest_status": "complete",
       "model_call_entries": 20,
-      "model_call_status_counts": {"ok": 16, "truncated": 4},
+      "model_call_status_counts": {
+        "ok": 16,
+        "truncated": 4
+      },
       "candidate_records": 16,
       "candidate_records_with_boolean_validity": 0,
       "selection_status": "recorded",
@@ -114,7 +147,10 @@
     "completed_arm_P3_v1_matched": {
       "manifest_status": "complete",
       "model_call_entries": 20,
-      "model_call_status_counts": {"ok": 18, "truncated": 2},
+      "model_call_status_counts": {
+        "ok": 18,
+        "truncated": 2
+      },
       "candidate_records": 12,
       "candidate_records_with_boolean_validity": 0,
       "selection_status": "recorded",
@@ -122,15 +158,22 @@
       "selection_file_bytes_match_manifest_hash": true,
       "selection_sha256_matches_P3_v2": false,
       "selection_iteration": 13,
-      "selection_working_metrics": {"combined_score": 0.25367448108894386, "recall": 1.0, "speed_ratio": 0.9927310690411106},
+      "selection_working_metrics": {
+        "combined_score": 0.25367448108894386,
+        "recall": 1.0,
+        "speed_ratio": 0.9927310690411106
+      },
       "wall_seconds": 2396.605,
-      "mean_intercall_minutes": 2.00,
+      "mean_intercall_minutes": 2.0,
       "truncated_calls_at_completion_token_limit": 2
     },
     "completed_arm_P4_v1_matched": {
       "manifest_status": "complete",
       "model_call_entries": 20,
-      "model_call_status_counts": {"ok": 19, "truncated": 1},
+      "model_call_status_counts": {
+        "ok": 19,
+        "truncated": 1
+      },
       "candidate_records": 17,
       "candidate_records_with_boolean_validity": 0,
       "selection_status": "recorded",
@@ -138,7 +181,11 @@
       "selection_file_bytes_match_manifest_hash": true,
       "selection_sha256_matches_P1_P2_seed_selections": true,
       "selection_iteration": 0,
-      "selection_working_metrics": {"combined_score": 0.2510576990181134, "recall": 1.0, "speed_ratio": 0.9978912907487935},
+      "selection_working_metrics": {
+        "combined_score": 0.2510576990181134,
+        "recall": 1.0,
+        "speed_ratio": 0.9978912907487935
+      },
       "wall_seconds": 2814.407,
       "mean_intercall_minutes": 2.31,
       "truncated_calls_at_completion_token_limit": 1
