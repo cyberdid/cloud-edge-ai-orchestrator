@@ -29,6 +29,18 @@ def test_b2_watchdog_has_isolated_session_and_prefix():
     assert "b12" not in session.lower()
 
 
+def test_rehearsal_evidence_is_versioned_by_protocol_and_source_hash():
+    from experiments.openevolve.colab.paper2_b2_watchdog import _rehearsal_path
+
+    protocol_sha = "a" * 64
+    source_a = "b" * 40
+    source_b = "c" * 40
+    assert _rehearsal_path(protocol_sha, source_a) != _rehearsal_path(protocol_sha, source_b)
+    assert _rehearsal_path(protocol_sha, source_a).name.startswith(
+        f"no-call-rehearsal-{protocol_sha[:12]}-{source_a[:12]}"
+    )
+
+
 def test_budget_gate_preserves_100_cu_reserve_and_70_4_draw_cap():
     _, _, can_continue, *_ = watchdog()
     assert can_continue(209.95, 200.0, 70.4, 100.0)

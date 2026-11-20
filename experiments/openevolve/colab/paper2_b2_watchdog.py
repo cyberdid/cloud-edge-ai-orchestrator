@@ -32,7 +32,6 @@ ARCHIVE = ROOT / "oe.tar.gz"
 KEY = Path("/root/.oe/sa-key.json")
 PROTOCOL = Path(__file__).resolve().parents[1] / "configs/b2_estimation_2026-11-20.json"
 CONTROL = ROOT / "control.json"
-REHEARSAL = ROOT / "no-call-rehearsal.json"
 CLI = "/opt/oe-watchdog/bin/colab"
 RUN_TIMEOUT_S = 6 * 60 * 60
 
@@ -106,6 +105,10 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
     temp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     temp.replace(path)
     path.chmod(0o600)
+
+
+def _rehearsal_path(protocol_sha256: str, source_commit: str) -> Path:
+    return ROOT / f"no-call-rehearsal-{protocol_sha256[:12]}-{source_commit[:12]}.json"
 
 
 def _run(args: list[str], *, timeout: int = 600, check: bool = True) -> subprocess.CompletedProcess:
@@ -209,8 +212,9 @@ def _prepare_session() -> None:
 
 
 def _require_rehearsal(protocol_sha256: str, source_commit: str) -> None:
+    rehearsal_file = _rehearsal_path(protocol_sha256, source_commit)
     try:
-        evidence = json.loads(REHEARSAL.read_text())
+        evidence = json.loads(rehearsal_file.read_text())
     except (OSError, json.JSONDecodeError) as exc:
         raise RuntimeError("passing no-call durability rehearsal is required before model calls") from exc
     required = {"status": "passed", "protocol_sha256": protocol_sha256,
@@ -344,9 +348,10 @@ def _run_live(protocol: dict[str, Any], protocol_sha256: str, source_commit: str
 
 
 def _run_rehearsal(protocol: dict[str, Any], protocol_sha256: str, source_commit: str) -> None:
-    if REHEARSAL.exists():
+    rehearsal_file = _rehearsal_path(protocol_sha256, source_commit)
+    if rehearsal_file.exists():
         try:
-            saved = json.loads(REHEARSAL.read_text())
+            saved = json.loads(rehearsal_file.read_text())
         except json.JSONDecodeError as exc:
             raise RuntimeError("existing rehearsal evidence is malformed; inspect it before retry") from exc
         if (saved.get("status") == "passed" and saved.get("protocol_sha256") == protocol_sha256
@@ -397,7 +402,7 @@ def _run_rehearsal(protocol: dict[str, Any], protocol_sha256: str, source_commit
         evidence = {**restored, "balance_before_cu": start_balance,
                     "balance_after_cu": end_balance, "account_draw_cu": start_balance - end_balance,
                     "runtime_recreated": True}
-        _atomic_json(REHEARSAL, evidence)
+        _atomic_json(rehearsal_file, evidence)
         print(json.dumps({"mode": "no_call_rehearsal", "status": "passed",
                           "balance_before_cu": start_balance, "balance_after_cu": end_balance,
                           "model_calls": 0, "gcs_prefix": protocol["gcs_prefix"]}, sort_keys=True))
