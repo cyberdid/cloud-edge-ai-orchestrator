@@ -14,7 +14,7 @@ This draft instead proposes a small **estimation/feasibility cohort**, with weak
 - **Pairs:** 6 preregistered task-seed pairs.
 - **Calls:** 20 per arm per pair; 40 per pair; maximum 240 logged Gemma calls.
 - **Conditions:** V1-matched and V2, same candidate sandbox, prompts, model digest, seed program, and call budget.
-- **Order:** pair order is fixed before the first model call; three pairs run V1-matched first and three V2 first. The exact allocation and seed list must be generated, committed, and hashed before launch.
+- **Order:** the current draft config fixes six seeds (`20261120`–`20261125`) and a balanced order (P1 V2-first, P2 V1-matched-first, P3 V2-first, P4 V1-matched-first, P5 V1-matched-first, P6 V2-first). This is saved in `experiments/openevolve/configs/b2_estimation_2026-11-20.json`; the protocol is still a draft until source, checker, holdout, and watchdog hashes are frozen.
 - **Model:** local Ollama Gemma 4 12B, frozen by immutable digest; no cloud-model fallback.
 - **Primary descriptive outcome:** per-arm count and proportion of selected artifacts that fail the independent holdout correctness check. Publish the full six-pair table and the paired 2×2 table; do not claim a statistically established treatment effect or report a confirmatory p-value.
 - **Secondary descriptive outcomes:** selected holdout score, false-improvement rate with explicit candidate and hash denominators, gate rejection reasons, wall time, model tokens, GPU time, and Colab CU.
