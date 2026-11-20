@@ -30,7 +30,7 @@ The frozen protocol instead runs a small **estimation/feasibility cohort**, with
 
 ## Compute envelope
 
-At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded planning estimate: 70.4 CU). The actual launch snapshot was 206.93 CU with one pre-existing assignment active; the 70.4-CU cap therefore left 36.53 CU above the 100-CU reserve for concurrent account use and estimation error. The latest snapshot in `B2_LIVE_STATUS_2026-11-20.json` is 206.46 CU with two active assignments, an observed pooled change of 0.47 CU since launch. The account meter is shared, so no exact B2-only cost can be inferred. The estimate is not a guarantee or a vendor quote.
+At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded planning estimate: 70.4 CU). The actual launch snapshot was 206.93 CU with one pre-existing assignment active; the 70.4-CU cap therefore left 36.53 CU above the 100-CU reserve for concurrent account use and estimation error. The latest snapshot in `B2_LIVE_STATUS_2026-11-20.json` is 205.17 CU with two active assignments, an observed pooled change of 1.76 CU since launch. The account meter is shared, so no exact B2-only cost can be inferred. The estimate is not a guarantee or a vendor quote.
 
 ## Required launch gates
 
@@ -48,7 +48,7 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 - The watchdog uses only `paper2-b2-estimation` and `paper2-v2/b2-estimation-2026-11-20`; account-wide guard is 70.4 CU from a persisted fresh start snapshot or 100 CU remaining, whichever comes first.
 - Local focused verification: 35 B2 tests passed; Python compilation, whitespace check, runner/watchdog no-call dry-runs, and systemd unit contract checks passed. The selected-artifact re-check retains interrupted runs as incomplete, and the summary is descriptive-only with no p-value.
 - Exact-hash no-call GCS rehearsal passed on 2026-11-20 with source `3e603e426930215838ce9a2aa475959bb241ff87`; evidence is in `B2_FROZEN_NO_CALL_REHEARSAL.json`. The account meter's immediate reading lagged its follow-up by 0.33 pooled CU, which is not attributable to B2 alone.
-- Live launch started on the e2-micro VM with launch balance 206.93 CU. At the latest snapshot, B2 was running `P1:v2` (seed `20261120`): nine model-call entries were logged (seven `ok`, two `truncated`), and eight evaluated candidate records were present (six marked valid, two invalid), with recall from 0.0 to 1.0. No arm was complete (0 of 12), and no selected artifact was available. These are intermediate search metrics, not a selected-program result.
+- Live launch started on the e2-micro VM with launch balance 206.93 CU. `P1:v2` completed with 20 ledger entries (16 `ok`, four `truncated`); its manifest records the official selection at `openevolve/best/best_program.py` with SHA-256 `40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619`. Its 18 candidate records include 12 marked valid and six invalid by the working evaluator; this is not the independent holdout result. The runner has moved to `P1:v1_matched`, so 1 of 12 arms is complete. Independent re-check remains scheduled after all arms finish.
 - The current main branch also contains a systemd unit fix placing the restart limiter in the correct section; it was reloaded without interrupting the active run. The execution source remains pinned to `3e603e426930215838ce9a2aa475959bb241ff87`.
 
 ## Interpretation boundary
