@@ -1,7 +1,7 @@
 {
   "status": "running",
-  "as_of_utc": "2026-11-20T09:41:32Z",
-  "as_of_unix": 1795167692,
+  "as_of_utc": "2026-11-20T09:54:48Z",
+  "as_of_unix": 1795168488,
   "protocol_id": "paper2-b2-estimation-2026-11-20-v1",
   "protocol_sha256": "8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719",
   "source_commit": "3e603e426930215838ce9a2aa475959bb241ff87",
@@ -18,10 +18,10 @@
     "maximum_account_draw_cu": 70.4,
     "minimum_balance_cu": 100.0,
     "launch_balance_cu": 206.93,
-    "current_balance_cu": 205.17,
-    "observed_pooled_draw_since_launch_cu": 1.76,
-    "remaining_draw_headroom_cu": 68.64,
-    "balance_above_minimum_cu": 105.17,
+    "current_balance_cu": 204.20,
+    "observed_pooled_draw_since_launch_cu": 2.73,
+    "remaining_draw_headroom_cu": 67.67,
+    "balance_above_minimum_cu": 104.20,
     "active_assignments": 2,
     "attribution_note": "The account meter is shared with another active Colab assignment; pooled draw cannot be attributed to B2 alone."
   },
@@ -32,9 +32,11 @@
     "current_run": "P1:v1_matched",
     "task_seed": 20261120,
     "gcs_phase": "running",
-    "gcs_last_state_update_unix": 1795167655.9722886,
-    "current_arm_manifest_status": "not_yet_created",
-    "current_arm_model_call_entries": 0,
+    "gcs_last_state_update_unix": 1795168425.0302436,
+    "current_arm_manifest_status": "running",
+    "current_arm_model_call_entries": 11,
+    "current_arm_call_status_counts": {"ok": 7, "truncated": 4},
+    "current_arm_candidate_records": 8,
     "last_completed_arm": {
       "run_id": "P1:v2",
       "manifest_status": "complete",
@@ -45,8 +47,12 @@
       "candidate_working_evaluator_invalid": 6,
       "selection_status": "recorded",
       "selection_path": "openevolve/best/best_program.py",
-      "selection_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619"
+      "selection_sha256": "40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619",
+      "truncated_calls_at_completion_token_limit": 4
     },
+    "total_truncated_calls_observed": 8,
+    "all_truncated_calls_reached_completion_token_limit": true,
+    "completion_token_limit": 2048,
     "independent_recheck": "deferred_until_all_12_arms_finish"
   },
   "inferential_analysis": "not applicable; this six-pair cohort is descriptive-only"
