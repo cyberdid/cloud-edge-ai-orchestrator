@@ -1,6 +1,8 @@
-# B2 estimation study — frozen registration and launch gates
+# B2 estimation study — frozen protocol and final results
 
 **Status (2026-11-21):** the six-pair, 12-arm estimation cohort is complete: all 240 calls were recorded, all 12 selected artifacts passed manifest and hash reconciliation, and the pinned independent re-check and descriptive analysis have finished. The final state and analysis artifacts are linked below. This estimation study does not replace the confirmatory design in `B2_DESIGN.md`.
+
+The timestamped progress snapshots later in this file are an execution history, not the current status. The final results section below is authoritative for outcome counts and interpretation.
 
 - Frozen protocol SHA-256: `8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719`
 - Checker fingerprint SHA-256: `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`
@@ -13,10 +15,10 @@ The 715.5-CU figure is a planning scenario for 61 paired seeds, assuming 25% of 
 
 The frozen protocol instead runs a small **estimation/feasibility cohort**, with descriptive outcomes and no confirmatory hypothesis test.
 
-## Proposed frozen design
+## Frozen protocol specification
 
 - **Question:** In this fixed approximate-kNN task and configuration, what selected-program validity outcomes and compute cost are observed for V1-matched and V2?
-- **Pairs:** 6 preregistered task-seed pairs.
+- **Pairs:** 6 protocol-fixed task-seed pairs. The six seeds and order were frozen before calls in the committed configuration; this was a source-controlled estimation protocol, not a journal-registered confirmatory preregistration.
 - **Calls:** 20 per arm per pair; 40 per pair; maximum 240 logged Gemma calls.
 - **Conditions:** V1-matched and V2, same candidate sandbox, prompts, model digest, seed program, and call budget.
 - **Order:** the frozen config fixes six seeds (`20261120`–`20261125`) and balanced order (P1 V2-first, P2 V1-matched-first, P3 V2-first, P4 V1-matched-first, P5 V1-matched-first, P6 V2-first). The protocol, checker, visible holdout, and re-check image are fingerprinted in `experiments/openevolve/configs/b2_estimation_2026-11-20.json`.
@@ -28,11 +30,15 @@ The frozen protocol instead runs a small **estimation/feasibility cohort**, with
 - **Missingness:** a missing arm or selected artifact is retained as an incomplete pair. Report assigned pairs, completed pairs, and missing reasons; do not replace a failed pair with a new seed.
 - **Stopping:** stop at 6 complete pairs, at 240 model calls, if aggregate account draw reaches 70.4 CU from the recorded launch snapshot, or if the global Colab balance reaches 100 CU, whichever comes first. Since the current B-12 L4 assignment shares the account balance, aggregate draw cannot be attributed exactly to B2; treat the cap conservatively and report concurrent usage. A budget stop leaves the cohort incomplete; it does not permit a new sample size or a confirmatory claim.
 
-## Compute envelope
+## Compute envelope (pre-run planning record)
+
+The figures and remaining-time estimates below are a historical planning snapshot, not the final cost report. The final cohort completed; account usage was pooled and cannot be attributed exactly to B2.
 
 At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded planning estimate: 70.4 CU). The actual launch snapshot was 206.93 CU with one pre-existing assignment active; the 70.4-CU cap therefore left 36.53 CU above the 100-CU reserve for concurrent account use and estimation error. At the 2026-11-20 12:22 UTC snapshot in `B2_LIVE_STATUS_2026-11-20.json`, the balance is 194.82 CU with two active assignments, an observed pooled change of 12.11 CU since launch and 58.29 CU of remaining cap headroom. The pooled meter reports 3.88 CU/hour, but usage cannot be attributed to B2 alone. At that rate the cap is about 15.0 hours away; this is a rough operational estimate, not a guarantee or vendor quote. Five of twelve arms are complete; P3 V2 took about 54.9 minutes for 20 calls, so allow roughly 6–8 hours for the seven remaining arms plus the final independent re-check and descriptive analysis, subject to substantial runtime variability.
 
-## Required launch gates
+## Launch gates (historical checklist; all cohort gates are now closed)
+
+The checklist below records conditions reviewed before and during launch. It is retained for provenance; do not interpret present-tense infrastructure references as current status. Current status and final account snapshot are in `PROGRESS.md` and `B2_LIVE_STATUS_2026-11-20.json`.
 
 1. Keep the existing B-12 project and its active `b12eval` L4 assignment untouched. The e2-micro read-only check currently reports both `b12-orchestrator.service` and the Paper II B1 watchdog as inactive; the account CLI still reports one active L4 assignment. Do not infer that this assignment is B2 or try to attach to it.
 2. **Completed in the frozen protocol:** exact six-seed list, balanced arm order, protocol JSON, selected-artifact re-check script, checker component fingerprint, source-visible holdout definition, and Docker image digest.
@@ -41,7 +47,9 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 5. **Passed at launch:** balance was 206.93 CU with one other assignment; the watchdog enforces the 70.4-CU aggregate draw cap and 100-CU floor.
 6. **Completed:** the persistent systemd unit ran the six-pair cohort independently of the laptop and resumed from dedicated GCS checkpoints. All 12 arms and 240 call-ledger entries are complete. Final reconciliation confirmed all manifests and exact call ledgers; no Colab assignment remains active.
 
-## Implementation checkpoint — 2026-11-20
+## Implementation and execution checkpoints — historical snapshots (2026-11-20)
+
+The timestamped records below are retained as execution history. The final results section above is authoritative for completion, outcome counts, service status, and interpretation.
 
 - Added the resumable B2 runner, isolated watchdog, Colab entrypoint, and systemd unit template. The runner refuses live calls unless this JSON is `frozen`; the dry-run reports 240 assigned calls and zero model calls.
 - Run manifests must match the pinned source Git SHA, protocol SHA, model digest, evaluator version, seed, and exact 20-call ledger. Resume skips validated completed arms and continues only a matching incomplete arm.
@@ -58,7 +66,7 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 
 ### Execution and artifact integrity
 
-- All **6 preregistered pairs**, **12 arms**, and **240 model-call ledger entries** completed. The ledgers contain 207 `ok` calls and 33 `truncated` calls; all 33 truncations reached the configured 2,048-token completion limit and remained within the fixed 20-call budget for each arm.
+- All **6 protocol-fixed pairs**, **12 arms**, and **240 model-call ledger entries** completed. The ledgers contain 207 `ok` calls and 33 `truncated` calls; all 33 truncations reached the configured 2,048-token completion limit and remained within the fixed 20-call budget for each arm.
 - The terminal GCS state is `complete`. Reconciliation verified all 12 manifests, frozen protocol/source/model fields, contiguous 20-call ledgers, and recorded official selections. All 12 selected-program file hashes independently matched their manifests.
 - The independent re-check ran from the frozen source commit `3e603e426930215838ce9a2aa475959bb241ff87`, matched checker fingerprint `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`, and used Docker image `antigravity-orion:local` with digest `sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2`.
 - Full per-run evidence is in [`B2_SELECTED_RECHECK_2026-11-21.json`](B2_SELECTED_RECHECK_2026-11-21.json); the machine-readable summary is in [`B2_ESTIMATION_SUMMARY_2026-11-21.json`](B2_ESTIMATION_SUMMARY_2026-11-21.json). Current infrastructure and budget state is in [`B2_LIVE_STATUS_2026-11-20.json`](B2_LIVE_STATUS_2026-11-20.json).
@@ -74,15 +82,17 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 | P5 | Pass (0.2241) | **Fail (0.0000)** |
 | P6 | Pass (0.2346) | Pass (0.2542) |
 
-V1-matched had **6/6 valid selections (100%)**; V2 had **5/6 (83.3%)**. The paired table is five pairs with both selections valid and one pair where V1-matched passed while V2 failed; there were no pairs where only V2 passed or where both failed. The descriptive difference in invalid-selection rates (V2 minus V1-matched) is **+16.7 percentage points**. Mean selected holdout score, counting invalid selections as zero per the registered analysis script, was 0.2253 for V1-matched and 0.3294 for V2.
+V1-matched had **6/6 valid selections (100%)**; V2 had **5/6 (83.3%)**. The paired table is five pairs with both selections valid and one pair where V1-matched passed while V2 failed; there were no pairs where only V2 passed or where both failed. The descriptive difference in invalid-selection rates (V2 minus V1-matched) is **+16.7 percentage points**. Mean selected holdout score, counting invalid selections as zero under the frozen analysis rule, was 0.2253 for V1-matched and 0.3294 for V2.
 
-The single invalid selection was **P5 V2**. Its working evaluator selected a program it marked valid with combined score 0.4199 and recall 0.9999. The independent checker reproduced holdout recall 1.0, but rejected the program on 140 fresh checks because reported distances were not derived from the input vectors. The selected artifact therefore received validity `false` and score 0 under the registered re-check procedure. This illustrates a correctness gap for this selected artifact; with six pairs, the cohort remains descriptive and cannot establish a general treatment effect.
+The single invalid selection was **P5 V2**. Its working evaluator selected a program it marked valid with combined score 0.4199 and recall 0.9999. The independent checker reproduced holdout recall 1.0, but rejected the program on 140 fresh checks because reported distances were not derived from the input vectors. The selected artifact therefore received validity `false` and score 0 under the frozen re-check procedure. This illustrates a correctness gap for this selected artifact; with six pairs, the cohort remains descriptive and cannot establish a general treatment effect.
 
 ### Interpretation
 
-The registered six-pair cohort supports an operational and descriptive result only. It does **not** establish V2 efficacy, equivalence, or generalization beyond this task and configuration. No confirmatory p-value was computed. The three holdout sets are source-visible, so the check is independently implemented and reproducible, but not a secret or sealed holdout.
+The source-frozen six-pair cohort supports an operational and descriptive result only. It does **not** establish V2 efficacy, equivalence, or generalization beyond this task and configuration. No confirmatory p-value was computed. The three holdout sets are source-visible, so the check is independently implemented and reproducible, but not a secret or sealed holdout.
 
-## Interpretation boundary
+## Historical live snapshots before cohort completion
+
+The dated snapshots below preserve the operational timeline and should not be read as current status. The final results and closed-out service state above are authoritative.
 
 - Live snapshot update — 2026-11-20 17:23 UTC: nine of twelve arms are complete (180/240 calls). P5 V1-matched completed with exactly 20 call records (19 `ok`, one token-limit-truncated), 15 candidate records, and its official selection recorded as iteration 0, program `cb65cbe6-2067-4aa7-b1ea-df28332162d2`. The selected artifact SHA-256 is `40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619`; I independently hashed the mirrored `best_program.py` bytes and they match. Working metrics were combined score 0.2481, recall 1.0, speed ratio 1.0038; these are not independent holdout results. The arm took 4,068.0 seconds (~67.8 minutes), with 3.38-minute mean intervals between model calls. P5 V2 is now running: at the snapshot it had two calls (one `ok`, one truncated) and two candidate records. Nine runs are listed as completed in GCS; the next arms are P5 V2 and both P6 conditions. The supervisor is active on e2-micro (PID 57418, one restart after the local six-hour CLI timeout); the same dedicated Colab L4 remains `BUSY`, with one active assignment. Balance is 181.54 CU, a pooled draw of 25.39 CU since launch; this leaves 45.01 CU to the 70.4-CU cap and 81.54 CU above the 100-CU reserve. The laptop is not required. No independent re-check has run; the frozen protocol remains unchanged.
 - Live snapshot update — 2026-11-20 19:16 UTC: ten of twelve arms are complete (200/240 calls); GCS also contains nine calls from the current P6 V2 arm, so 209 call entries are recorded. P5 V2 completed with exactly 20 calls (16 `ok`, four token-limit-truncated), 13 candidate records, and official selection iteration 1, program `71af3c56-bb1d-4407-a83f-d2b68cb6bba7`. Its selected artifact SHA-256 is `3e249db68d4cf0acd3a4d3088973bcec27c0d9487d592d1e63d4d46c5a18543f`; I checked the GCS `best_program.py` bytes and they match. Working evaluator metrics were valid=true, combined score 0.4199, recall 0.9999, speed ratio 0.7716; these are not independent re-check results. The arm took 4,360.25 seconds (~72.7 minutes), with a 3.61-minute mean inter-call interval. P6 V2 is running with nine calls (eight `ok`, one truncated) and eight candidate records. The e2-micro supervisor is active (PID 57418, one restart after its local CLI timeout), and Colab L4 is `BUSY`; one assignment is active. Balance is 176.05 CU, a pooled draw of 30.88 CU since launch, leaving 39.52 CU to the 70.4-CU cap and 76.05 CU above the 100-CU floor. Thirty-one calls remain across P6 V2 and P6 V1-matched; rough execution estimate is 2.5–4 hours, then the independent re-check and descriptive analysis. No re-check has run; the frozen protocol remains unchanged.

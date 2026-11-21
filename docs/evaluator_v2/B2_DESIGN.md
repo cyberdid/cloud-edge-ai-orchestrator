@@ -1,7 +1,7 @@
 # B2 design memo: confirmatory comparison of kNN evaluators V1 and V2
 
-**Status:** design memo only; not a preregistration and not authorization to start model calls.  
-**B1 evidence:** `B1_RESULTS.md`; raw artifacts at `gs://oe-colab-scale-0903767759/paper2-v2/b1/`.  
+**Status (2026-11-21):** this memo remains the design for a future confirmatory comparison; no confirmatory cohort has been run. A separate six-pair estimation cohort was completed under the frozen protocol in `B2_ESTIMATION_DRAFT.md`. Its results do not satisfy this memo's confirmatory sample-size, sealed-holdout, or external-validity requirements. This memo is not authorization to start another model-call campaign.
+**B1 evidence:** `B1_RESULTS.md`; raw artifacts at `gs://oe-colab-scale-0903767759/paper2-v2/b1/`.
 **Purpose:** specify what must be decided and validated before B2 can be frozen.
 
 ## 1. What B1 established
@@ -100,6 +100,6 @@ Before any B2 call, run a no-model-call cost rehearsal: provision one Colab L4 s
 | PDF/manuscript review after results | `gpt-6.1-terra` / low–medium for rendered pages | Tectonic, Poppler, `pdftotext`, page render/contact sheet | Only after results; no model calls to Gemma/Argon |
 | Experiment | Gemma model/digest explicitly frozen in B2 | e2-micro watchdog + Colab L4, GCS artifacts, Ollama, Docker | CU/token caps, 100-CU reserve if still adopted, no cloud-model fallback |
 
-## 8. B2 launch gate
+## 8. Future confirmatory-study launch gate
 
-B2 remains **not ready to launch** until the matched timing implementation exists, the independent holdout is committed and inaccessible to the working evaluator, the run-level endpoint and power assumptions are frozen, the budget fits available Colab CU with contingency, and the no-call watchdog rehearsal passes. As checked on 2026-11-20, the B-12 orchestrator is active and enabled on the e2-micro; the Paper II B1 watchdog unit is inactive and disabled. The Colab account shows one active L4 assignment, but the local CLI did not resolve its session name. Do not reuse or stop that assignment for B2; a separate B2 session, GCS prefix, and watchdog must be prepared.
+A future confirmatory cohort remains **not ready to launch** until it has a powered sample based on defensible discordance assumptions, an inaccessible sealed holdout, a feasible budget with contingency, and a new no-call durability rehearsal. The six-pair B2 estimation cohort is complete and must not be relabeled confirmatory. Its terminal service, stopped Colab assignment, run IDs, budget snapshot, and final reconciliation are recorded in `B2_LIVE_STATUS_2026-11-20.json` and `B2_ESTIMATION_DRAFT.md`; the earlier operational snapshots below are historical evidence only.

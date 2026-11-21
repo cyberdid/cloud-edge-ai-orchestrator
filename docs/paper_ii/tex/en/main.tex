@@ -1,6 +1,7 @@
 \documentclass[11pt]{article}
 \newcommand{\tablelang}{en}
 \input{../../../paper/tex/preamble}
+\usepackage{float}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
@@ -17,13 +18,13 @@
 \small PhD Student, State University of Trade and Economics, Kyiv, Ukraine\\
 \small In cooperation with the Department of Software Engineering and Cybersecurity\\[2pt]
 \small ORCID: \href{https://orcid.org/0009-0004-9610-9242}{0009-0004-9610-9242}}
-\date{19 November 2026}
+\date{21 November 2026}
 \maketitle
 
 \begin{center}\small\textit{Preprint draft. The manuscript has not been submitted for peer review or deposited with an archive.}\end{center}
 
 \begin{abstract}
-Large language model (LLM)-guided program evolution uses an evaluator both to guide search and to select a candidate for use. If the evaluator omits a task requirement, additional search can amplify rather than correct the mismatch. We report two descriptive studies registered before their campaigns, using OpenEvolve 0.4.0 on circle packing and approximate nearest-neighbour search. The Colab L4 study compared Gemma 4 configurations, search modes and budgets; a separate laptop pilot compared evolutionary search and best-of-N with Gemma 4 12B. In three 1,000-call MoE evolutionary runs, the best valid circle packings scored 2.432, 2.204 and 2.258 at the published precision, while the selected verified outcomes were 2.432, 0 and 0. Thus, in two runs, selection discarded a valid improvement found during search. After serial kNN re-timing, the cloud-assisted arm scored above its matched Gemma-only arm in eight of nine pairs, with a median paired difference of 0.776 (exploratory). Among 213 cloud-assisted kNN candidate evaluations ranked above the working seed, 60 (28.2\%) did not constitute verified improvements: four were invalid and 56 were valid but scored no higher than the verified seed. These findings are a bounded audit of two tasks and one framework; they do not establish general scaling laws or a causal benefit of cloud assistance.
+Large language model (LLM)-guided program evolution uses an evaluator both to guide search and to select a candidate for use. If the evaluator omits a task requirement, additional search can amplify rather than correct the mismatch. We report two descriptive studies registered before their campaigns, using OpenEvolve 0.4.0 on circle packing and approximate nearest-neighbour search. The Colab L4 study compared Gemma 4 configurations, search modes and budgets; a separate laptop pilot compared evolutionary search and best-of-N with Gemma 4 12B. In three 1,000-call MoE evolutionary runs, the best valid circle packings scored 2.432, 2.204 and 2.258 at the published precision, while the selected verified outcomes were 2.432, 0 and 0. Thus, in two runs, selection discarded a valid improvement found during search. After serial kNN re-timing, the cloud-assisted arm scored above its matched Gemma-only arm in eight of nine pairs, with a median paired difference of 0.776 (exploratory). Among 213 cloud-assisted kNN candidate evaluations ranked above the working seed, 60 (28.2\%) did not constitute verified improvements: four were invalid and 56 were valid but scored no higher than the verified seed. A later, separately frozen six-pair kNN estimation cohort compared a distance-gated evaluator with a timing-matched control: selected programs passed independent checks in 5/6 and 6/6 runs, respectively. This small cohort is descriptive and does not establish an evaluator effect. Overall, the findings are a bounded audit of two tasks and one framework; they do not establish general scaling laws or a causal benefit of cloud assistance.
 \end{abstract}
 
 \noindent\textbf{Keywords:} LLM-guided program evolution; OpenEvolve; program search; evaluator validity; benchmark reliability; independent verification.
@@ -49,7 +50,7 @@ Our contribution is an empirical audit of search outcomes and evaluator agreemen
 \item \textbf{RQ4: Evaluator agreement.} How often do candidates ranked above the seed by the working evaluator fail the independent re-check or fail to improve the verified seed score?
 \end{itemize}
 
-The pre-registrations specified descriptive reporting and no significance tests. All inferential comparisons in this manuscript were added after the campaigns and are explicitly exploratory. We present them as summaries of these runs, not as confirmatory tests or estimates of general causal effects.
+The original campaign registrations specified descriptive reporting and no significance tests. Their inferential comparisons were added after those campaigns and are explicitly exploratory. The later B2 cohort had a separate protocol frozen before its calls and was designed for estimation only; no confirmatory test was planned or computed. We do not pool its results with the original campaigns.
 
 % =====================================================================
 \section{Related work}\label{sec:related}
@@ -93,6 +94,12 @@ The separate laptop pilot was registered on 29 October for 18 runs. All 12 plann
 
 The Colab and laptop 12B runs are not a hardware-controlled comparison. They used different model builds, Ollama versions and candidate-execution environments. In the Colab 12B B condition, the build repeatedly generated an inapplicable search-and-replace block; no candidate was produced in the circle-packing runs. This known failure must be considered when interpreting the 12B L--B contrast.
 
+\subsection{Subsequent B2 estimation cohort}
+
+After the original campaigns, a separate six-pair estimation cohort compared two kNN evaluators under a protocol frozen in Git commit \code{3e603e426930215838ce9a2aa475959bb241ff87} before model calls. Each pair used the same task seed and seed program, local Gemma 4 12B (model digest \code{6114515d63c1}), prompt, sandbox, and 20-call budget per arm. V1-matched used the V2 timing harness but omitted its pre-fitness distance-correctness gate; V2 applied that gate before timing and scoring. Pair order was fixed in the configuration. The run-level endpoint was the official OpenEvolve-selected program, identified by its recorded hash, not the candidate-log maximum.
+
+The frozen protocol was \code{paper2-b2-estimation-2026-11-20-v1} (SHA-256 \code{8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719}). The same independently implemented checker evaluated both arms using fixed holdout seeds 9001--9003. These seeds were source-visible and were not supplied to the candidate prompt or working evaluator; the checks are reproducible but not a secret or sealed holdout. The cohort was explicitly estimation/feasibility work, not a confirmatory test. It was analyzed separately from the original campaigns.
+
 \subsection{kNN timing correction}
 
 The first kNN re-check pass ran several Docker sandboxes concurrently. Under that load the identical seed code received scores from 0.02 to 1.0 because the score includes a wall-clock speed component. We therefore serially re-timed the seed and all valid above-seed candidates on an otherwise idle laptop, one sandbox at a time. The seed code hash has eight serial observations: five designated calibration rows and three additional observations from runs in which the same code was selected as the shipped program. The main endpoint pools all eight (median 0.2235; range 0.1606--0.2438); the five calibration rows alone have median 0.238 (range 0.1919--0.2438). Pilot L false improvements change from 36/42 under the calibration-only sensitivity to 33/42 under the pooled median. LC kNN remains 60/213, and LC is higher than L in 8/9 paired runs under both definitions.
@@ -101,7 +108,7 @@ The serial pass covered 214 distinct valid above-seed hashes from Colab and 14 a
 
 \subsection{Statistical analysis}
 
-Both registrations specify descriptive analysis only. We report post hoc two-sided comparisons as exploratory. Circle-packing outcomes across the four L-arm model groups are summarized with a Kruskal--Wallis test and pairwise Mann--Whitney tests with Holm adjustment. L--B comparisons are also reported per task and model, with Holm adjustment across the nine available comparisons. LC--L analyses use matched seeds, paired sign tests, Wilcoxon signed-rank tests and percentile bootstrap intervals from 10,000 resamples of the paired differences. The analyses do not establish equivalence, causal effects or general performance outside these tasks.
+The two original campaign registrations specify descriptive analysis only; the B2 protocol separately prohibits confirmatory inference. We report post hoc two-sided comparisons for the original campaigns as exploratory. Circle-packing outcomes across the four L-arm model groups are summarized with a Kruskal--Wallis test and pairwise Mann--Whitney tests with Holm adjustment. L--B comparisons are also reported per task and model, with Holm adjustment across the nine available comparisons. LC--L analyses use matched seeds, paired sign tests, Wilcoxon signed-rank tests and percentile bootstrap intervals from 10,000 resamples of the paired differences. The B2 cohort has six pairs and is summarized with counts and descriptive scores only. These analyses do not establish equivalence, causal effects or general performance outside these tasks.
 
 % =====================================================================
 \section{Results}\label{sec:results}
@@ -178,6 +185,34 @@ On the laptop, L shipped a valid circle packing in all three runs (median 1.773;
 
 The laptop and Colab 12B results cannot isolate a hardware effect. In addition to different execution environments, the Colab 12B build differed from the laptop build. The Colab 12B B failure described above is a concrete example of how a model build can interact with a diff-based search loop.
 
+\subsection{B2 selected-program estimation results}
+
+All six B2 pairs completed, yielding 12 runs and 240 logged model calls. There were 207 calls marked \texttt{ok} and 33 token-limit truncations; every truncated response reached the 2,048-token completion cap. The pinned independent re-check verified all 12 selected artifact hashes against their run manifests before evaluation. Table~\ref{tab:b2} reports the per-pair independent score and validity of the program selected by each evaluator. Scores for invalid selections are set to zero under the frozen analysis rule.
+
+\begin{table}[H]
+\centering\small
+\caption{B2 selected-program outcomes in the separate six-pair estimation cohort. Scores are independent holdout scores; an invalid selection is scored zero.}
+\label{tab:b2}
+\begin{tabularx}{\linewidth}{@{}lrrll@{}}
+\toprule
+Pair & V1-matched score & V2 score & V1-matched valid & V2 valid \\
+\midrule
+P1 & 0.2107 & 0.2491 & Yes & Yes \\
+P2 & 0.2471 & 0.2141 & Yes & Yes \\
+P3 & 0.2310 & 1.0000 & Yes & Yes \\
+P4 & 0.2043 & 0.2588 & Yes & Yes \\
+P5 & 0.2241 & 0.0000 & Yes & No \\
+P6 & 0.2346 & 0.2542 & Yes & Yes \\
+\midrule
+Valid selections & 6/6 & 5/6 & 100\% & 83.3\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The paired validity table contains five pairs in which both selections passed, one in which V1-matched passed and V2 failed, and none in which only V2 passed or both failed. The descriptive difference in invalid-selection rates (V2 minus V1-matched) is +16.7 percentage points. Mean selected score, assigning zero to invalid selections, was 0.2253 for V1-matched and 0.3294 for V2; this score contrast is descriptive and should not be read as a causal or inferential comparison. The only invalid selection was P5 V2: its working evaluator had marked it valid, but the independent checker reported 140 fresh-query failures because returned squared distances were not derived from the input vectors. Holdout recall for the selected program was 1.0, illustrating why recall alone did not establish contract compliance.
+
+No confirmatory p-value was computed. With six pairs, one discordant pair, one task, one local model configuration, and a source-visible holdout, this cohort neither demonstrates that V2 reduces invalid selection nor supports equivalence or generalization. Account-level Colab usage was pooled with other assignments, so its 35.56-CU balance change from launch cannot be attributed to B2 alone.
+
 \subsection{False improvements under independent re-check}
 
 Table~\ref{tab:false} shows that every evaluated group with above-seed candidates had at least some false improvements, with rates depending on task, arm and budget. In the MoE LC kNN condition, 60 of 213 above-seed candidate evaluations were false improvements (28.2\%): four were invalid and 56 passed validity but had a serially verified score no greater than the pooled seed score. This classification does not equate score with latency alone: the score combines recall and a relative-time penalty. In the laptop pilot, 33/42 L kNN evaluations were false (79\%), while B had five above-seed evaluations and all five were false. These denominators count candidate evaluations, not unique programs; the pilot B rate is especially unstable because $n=5$.
@@ -212,7 +247,7 @@ Circle-packing false improvements often exploited differences between the workin
 % =====================================================================
 \section{Discussion}\label{sec:discussion}
 
-\paragraph{Fitness is an operational objective, not a correctness proof.} Across both tasks, candidates can be ranked above the seed by the working evaluator and still fail an independent check. The kNN case is particularly clear: recall and speed are insufficient when the API contract also requires accurate squared distances. An evaluator should encode validity and task constraints before it awards a speed bonus. A robust design can gate performance measurement on correctness, although this study did not experimentally compare alternative evaluator designs.
+\paragraph{Fitness is an operational objective, not a correctness proof.} Across both tasks, candidates can be ranked above the seed by the working evaluator and still fail an independent check. The kNN case is particularly clear: recall and speed are insufficient when the API contract also requires accurate squared distances. The separate B2 estimation cohort shows that a pre-fitness correctness gate is implementable, but selected-program validity was 5/6 under V2 and 6/6 under the timing-matched control. The single V2 failure illustrates a remaining gap; the small cohort does not establish that the gate improves or worsens selection reliability.
 
 \paragraph{Search budget can amplify evaluator defects.} The long MoE L runs found strong valid circle packings, but the working evaluator selected invalid candidates in two of three runs. More calls therefore improved the best-valid candidate pool without reliably improving the selected output. This distinction suggests that future studies should report both best-valid and selected-verified outcomes, and should audit the exact program that the search process would ship.
 
@@ -220,13 +255,14 @@ Circle-packing false improvements often exploited differences between the workin
 
 \paragraph{Cloud assistance.} The MoE LC arm had higher kNN verified scores than L in eight of nine pairs after the timing correction. The post-hoc nature, small number of pairs, partial completion of the planned LC runs and extra cloud calls limit the strength of this finding. Circle-packing results were directionally favorable to LC but inconclusive. A follow-up should pre-register the comparison, repeat it across independent tasks and models, and include cloud cost in a common unit.
 
-\paragraph{What this paper adds.} Prior work has shown that LLM-guided evolutionary search can discover high-performing programs, including on the circle-packing family~\citep{romera2024funsearch,novikov2025alphaevolve,assumpcao2025codeevolve}. Our evidence addresses a complementary operational question: how often does a search evaluator's ranking survive independent verification, and how does that answer change after timing is measured serially? The results are useful as a bounded audit of one framework and model family; they are not a general benchmark of coding agents.
+\paragraph{What this paper adds.} Prior work has shown that LLM-guided evolutionary search can discover high-performing programs, including on the circle-packing family~\citep{romera2024funsearch,novikov2025alphaevolve,assumpcao2025codeevolve}. Our evidence addresses a complementary operational question: how often does a search evaluator's ranking survive independent verification, and how does that answer change after timing is measured serially? The later B2 cohort adds a small, separately reported estimate for selected-program validity under a distance-correctness gate. Together, these are bounded audits of one framework and model family, not a general benchmark of coding agents or evidence of a general gate effect.
 
 % =====================================================================
 \section{Limitations and threats to validity}\label{sec:limitations}
 
 \begin{itemize}
 \item \textbf{Task scope.} The study uses two small, constructed tasks. Circle packing is an established benchmark, not a novel problem; approximate kNN is a bespoke task. Results do not establish performance on real repository defects or scientific code.
+\item \textbf{B2 estimation limits.} The later evaluator comparison contains six pairs on one kNN task and one local model digest. It was designed for estimation, not power to detect a treatment effect; the source-visible fixed holdout is not sealed. The observed 6/6 versus 5/6 validity counts are imprecise and do not establish efficacy or equivalence. The aggregate Colab meter was shared with other assignments, preventing exact B2-only compute-unit attribution.
 \item \textbf{Model scope.} The scale ladder uses several configurations within Gemma 4. The cloud-assisted comparison uses one Argon setting. Model quality, architecture and deployment environment vary together; the experiments do not identify a general scaling law.
 \item \textbf{Incomplete campaigns.} The Colab study completed 167/179 amended-plan runs. The laptop pilot completed all 12 planned L/B runs; its separate six-run LC condition was excluded after quota exhaustion, with one partial LC run. The pilot has only three seeds per task and arm.
 \item \textbf{Exploratory inference.} Both registrations specified descriptive analysis. The tests reported here were added after results were known; some p-values are unadjusted and the Holm corrections apply only to the stated comparison families. Small sample sizes limit precision.
@@ -239,12 +275,12 @@ Circle-packing false improvements often exploited differences between the workin
 % =====================================================================
 \section{Data and code availability}\label{sec:availability}
 
-The preregistrations, dated amendments, deviation logs, run-level exploratory analysis, serial kNN re-check files and analysis code are available in the public repository snapshot at commit \code{57a55d3d23d6c7c3dd7be3abfc1a0d9c758fc6b5}~\citep{pylypenko2026artifacts}. The initial protocols are \code{docs/colab\_scale/PREREGISTRATION.md} and \code{docs/openevolve\_pilot/PREREGISTRATION.md}; the Colab amendment is \code{docs/colab\_scale/LC\_EXTENSION\_2026-11-07.md}. Complete raw run folders and model-call traces are preserved in separate archives and are not redistributed in this draft. The run-level metrics and kNN selection audit in \code{docs/paper\_ii/results/revision\_metrics.json} are rebuilt by \code{scripts/paper\_ii/revision\_metrics.py}; figures are rebuilt by \code{bash scripts/paper\_ii/build.sh}. No archival DOI is claimed.
+The original campaign preregistrations, dated amendments, deviation logs, run-level analysis, serial kNN re-check files and code are available in the immutable repository snapshot at commit \code{57a55d3d23d6c7c3dd7be3abfc1a0d9c758fc6b5}~\citep{pylypenko2026artifacts}. The separate B2 estimation protocol was frozen before calls in source commit \code{3e603e426930215838ce9a2aa475959bb241ff87}; its configuration, final report, selected-program re-checks and descriptive summary are available at \code{experiments/openevolve/configs/b2\_estimation\_2026-11-20.json} and \code{docs/evaluator\_v2/}. The per-run B2 re-check and summary are committed as \code{B2\_SELECTED\_RECHECK\_2026-11-21.json} and \code{B2\_ESTIMATION\_SUMMARY\_2026-11-21.json}. Full raw run folders and model-call traces are retained in a separate GCS archive and are not included in the Git snapshot. The original analysis and figures are rebuilt by \code{bash scripts/paper\_ii/build.sh}. No archival DOI is claimed.
 
 % =====================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-In these two bounded studies, LLM-guided program evolution produced useful circle-packing candidates across several Gemma 4 configurations, while independent re-checks exposed gaps between working fitness and verified behavior. In two of three 1,000-call MoE L runs, the search found a valid circle packing that the selection rule did not retain. The post hoc serial kNN analysis found a higher verified score in eight of nine LC--L pairs and 60/213 false-improvement candidate evaluations above the seed. Incomplete campaigns, task scope, timing sensitivity, a build-specific failure and exploratory analyses limit broader claims. Future work should compare evaluator designs prospectively, gate performance scoring on correctness, use independent tasks and report raw traces, verified outputs and end-to-end costs.
+Across the two original descriptive studies and the separate B2 estimation cohort, independent checks exposed gaps between working fitness and verified behavior. In two of three 1,000-call MoE L runs, the search found a valid circle packing that the selection rule did not retain. The post hoc serial kNN analysis found a higher verified score in eight of nine LC--L pairs and 60/213 false-improvement candidate evaluations above the seed. In B2, one of six V2-selected programs failed the distance contract, while all six timing-matched V1 selections passed; this small descriptive comparison does not establish a gate effect. Incomplete campaigns, narrow task scope, timing sensitivity, a build-specific failure and small estimation samples limit broader claims. Future work should compare evaluator designs on independent tasks with adequately planned samples and report raw traces, verified outputs and end-to-end costs.
 
 \section*{Research transparency}
 \textbf{Funding and competing interests.} No external funding is reported. The study used the author's hardware and service accounts. The author declares no competing financial interest related to OpenEvolve or the cited systems.
@@ -260,7 +296,7 @@ In these two bounded studies, LLM-guided program evolution produced useful circl
 \appendix
 \section{Registration and deviations}\label{app:registration}
 
-The laptop pilot was registered on 29 October under tag \code{oe-pilot-prereg}; the Colab scale study was registered on 30 October under tag \code{colab-scale-prereg}. The initial Colab plan was 156 runs. On 5 November, after interim results and budget had been reviewed, fourteen 31B slots were removed and three exploratory long-budget best-of-N circle-packing runs were added (145 total). On 6 November four 31B circle-packing slots were restored (149 total). On 7 November, after 139/149 runs were complete and while initial LC runs were in progress, the owner amended the ongoing plan by adding 20 LC runs and 10 unpaired L controls (179 planned; 30 LC runs total). Earlier L/B results and LC operational logs had already been inspected. The amended LC size was a resource allocation, not a power calculation. The final inventory contains 167 completed runs, ten unstarted LC runs and two quota-paused partial LC runs. The pilot completed all 12 planned L/B runs; the six-run LC condition was excluded after quota exhaustion. Other material deviations include the Colab 12B B diff-application failure, serial re-timing after concurrent measurements of the seed ranged from 0.02 to 1.0, and post hoc inferential tests. Full dated records are in the preregistration amendment and deviation logs.
+The laptop pilot was registered on 29 October under tag \code{oe-pilot-prereg}; the Colab scale study was registered on 30 October under tag \code{colab-scale-prereg}. The initial Colab plan was 156 runs. On 5 November, after interim results and budget had been reviewed, fourteen 31B slots were removed and three exploratory long-budget best-of-N circle-packing runs were added (145 total). On 6 November four 31B circle-packing slots were restored (149 total). On 7 November, after 139/149 runs were complete and while initial LC runs were in progress, the owner amended the ongoing plan by adding 20 LC runs and 10 unpaired L controls (179 planned; 30 LC runs total). Earlier L/B results and LC operational logs had already been inspected. The amended LC size was a resource allocation, not a power calculation. The final inventory contains 167 completed runs, ten unstarted LC runs and two quota-paused partial LC runs. The pilot completed all 12 planned L/B runs; the six-run LC condition was excluded after quota exhaustion. The separate B2 estimation protocol was frozen in Git commit \code{3e603e426930215838ce9a2aa475959bb241ff87} before its first calls; it specified six matched kNN pairs and descriptive analysis only. The B2 cohort completed all 12 arms, and no sample-size expansion or confirmatory analysis was performed. Other material deviations include the Colab 12B B diff-application failure, serial re-timing after concurrent measurements of the seed ranged from 0.02 to 1.0, and post hoc inferential tests for the original campaigns. Full dated records are in the preregistrations, protocol and deviation logs.
 
 \section{Evidence map}\label{app:evidence}
 
@@ -278,6 +314,8 @@ Serial kNN correction & \path{docs/colab_scale/results/knn_serial_retiming_2026-
 Selection audit & \path{docs/paper_ii/results/revision_metrics.json}; \path{scripts/paper_ii/revision_metrics.py} \\
 Exploratory statistics & \path{docs/colab_scale/results/exploratory_tests_2026-11-19.json}; \path{scripts/analysis/oe_exploratory_tests.py} \\
 Article figures & \path{scripts/paper_ii/make_figures.py}; \path{fig4_selection_audit_en.pdf} \\
+B2 frozen protocol and configuration & \path{experiments/openevolve/configs/b2_estimation_2026-11-20.json}; \path{docs/evaluator_v2/B2_ESTIMATION_DRAFT.md} \\
+B2 selected-program re-check and descriptive summary & \path{docs/evaluator_v2/B2_SELECTED_RECHECK_2026-11-21.json}; \path{docs/evaluator_v2/B2_ESTIMATION_SUMMARY_2026-11-21.json} \\
 \bottomrule
 \end{tabularx}
 \end{minipage}

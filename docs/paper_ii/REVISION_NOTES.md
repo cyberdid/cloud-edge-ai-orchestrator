@@ -1,8 +1,35 @@
 # Revision notes: *When Fitness Scores Mislead*
 
-**Revision:** 2, 19 November 2026
+**Revision:** 3, 21 November 2026
 
-**Scope:** editorial and reproducibility revision of the English and Ukrainian preprint, using existing repository evidence. No new LLM campaign, benchmark run, or sandbox re-check was performed.
+**Scope:** bilingual manuscript update with the completed B2 estimation cohort and synchronized publication metadata. The B2 cohort was already complete before this revision; no new LLM campaign or benchmark run was performed while preparing revision 3. The English and Ukrainian PDFs are rebuilt from the same evidence. Revision 2's prior editorial and reproducibility work is retained below as historical revision history.
+
+## Revision 3 changes — B2 estimation cohort
+
+### 1. Protocol and evidence boundary
+
+- Added the later B2 cohort as a separate follow-up, distinct from the original Colab and laptop campaigns. Its protocol was frozen in source commit `3e603e426930215838ce9a2aa475959bb241ff87` before the model calls; the immutable protocol ID is `paper2-b2-estimation-2026-11-20-v1`, SHA-256 `8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719`.
+- Described the matched comparison: six fixed kNN task-seed pairs; V1-matched retained the V2 timing path but omitted its distance-correctness gate; V2 applied the gate before timing and scoring; each arm had 20 calls using local Gemma 4 12B digest `6114515d63c1`.
+- Disclosed that holdout seeds 9001–9003 were source-visible. They were not passed to the candidate prompt or working evaluator, but this is not a secret or sealed holdout.
+- Added the pinned checker fingerprint `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08` and Docker image digest `sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2` to the methods/evidence trail.
+
+### 2. Results and interpretation
+
+- Reported all six pairs, 12 complete arms, 240 recorded calls, 207 `ok` calls and 33 token-limit truncations (all reached the 2,048-token cap). All 12 official selected-program hashes matched their manifests before re-check.
+- Added the per-pair independent scores and validity counts: V1-matched passed 6/6; V2 passed 5/6. Five pairs had both pass, one had only V1-matched pass, and none had only V2 pass or both fail. The descriptive invalid-selection risk difference (V2 minus V1-matched) is +16.7 percentage points.
+- Described P5 V2 accurately: the working evaluator marked the selected program valid, but independent re-check recorded 140 fresh-query distance-contract failures. Its holdout recall was 1.0, showing that recall alone did not establish compliance.
+- Reported mean selected scores including invalid selections as zero (0.2253 V1-matched; 0.3294 V2) as descriptive only. No confirmatory p-value was computed. No efficacy, equivalence, or generalization claim is made; original campaign results were not pooled with B2.
+- Disclosed the 35.56-CU change in the shared Colab account meter without attributing it solely to B2, because concurrent assignments made exact cost attribution unavailable.
+
+### 3. Manuscript, repository and package updates
+
+- Updated English and Ukrainian abstracts, methods, results, discussion, limitations, availability statements, conclusions, registration chronology, and evidence maps.
+- Updated the README and `CITATION.cff` to identify revision 3, dated 21 November 2026, and preserve the preprint/no-peer-review status.
+- Reconciled B2 progress and confirmatory-design documents: the estimation cohort is complete; the separate confirmatory study remains unrun and still requires a sealed holdout, defensible sample-size assumptions and a feasible budget.
+- Added the frozen B2 configuration, final report, selected re-check, and descriptive summary to the publication evidence map and package checksum manifest.
+- Rebuilt both PDFs and visually inspected every rendered page; verified extracted text, package hashes, and formatting. The build makes no model calls and launches no benchmark.
+
+## Revision 2 changes — 19 November 2026
 
 ## Changes made
 

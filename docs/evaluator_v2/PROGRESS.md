@@ -1,15 +1,16 @@
 # Paper II revision and evaluator V2 progress
 
-Last updated: 2026-11-20
+Last updated: 2026-11-21
 
 ## Status
 
 | Work package | Status | Evidence / next action |
 |---|---|---|
 | A1–A3: manuscript corrections | Complete in `main` commit `0e5f8fb1bb0279dffd656618ff2ab3a0a17f17e8` | Preregistration history, claims, and layout revisions are in that commit. |
+| Paper II revision 3: B2 results integrated | Complete in the bilingual publication package | EN/UK manuscripts and PDFs report the six-pair B2 estimation cohort separately, identify it as a source-frozen estimation protocol rather than a formal confirmatory preregistration, and make no treatment-effect claim. PDFs and linked B2 evidence are covered by `docs/paper_ii/SHA256SUMS`; see `docs/paper_ii/REVISION_NOTES.md`. |
 | B1: evaluator V2 feasibility pilot | Complete as a technical feasibility run; top-level GCS state reconciled after runner response loss | V1 and V2 each have a `complete` manifest and exactly 20 contiguous call records (18 `ok`, 2 `truncated`); evaluator/model/seed/protocol/commit match. Raw artifacts are in `gs://oe-colab-scale-0903767759/paper2-v2/b1/`. No active Colab assignment remains. e2-micro checkout is at `68a1c8a68994395d5f69f4558d71a7966c3bc53c`; the service is inactive and disabled. This is one-seed descriptive evidence, not a confirmatory result. See `DEVIATIONS.md` and `B1_RESULTS.md`. |
-| B2: confirmatory V1/V2 comparison | Design memo, matched V1 control, and official L/LC selection-artifact tracking implemented; not ready to launch | See `B2_DESIGN.md`. B1 provides no efficacy estimate. Exact McNemar planning scenarios require 61–287 paired seeds (hypothetical assumptions) and project to ~715–3,367 CU, far above the ~111 CU available above the 100-CU reserve. A post-hoc audit found V1 candidate-log maximum (0.2502050) differs from official selected artifact recorded score (0.2433403); both code hashes are tracked and future primary endpoints use the official program hash. Remaining gates: sealed holdout, empirically justified power assumptions, no-call watchdog rehearsal, and a feasible registered budget. Do not launch a small run as confirmatory. |
-| B2 estimation/feasibility cohort | Budget-capped six-pair draft and runner implemented; Colab persistence rehearsal passed; **no model calls made** | `B2_ESTIMATION_DRAFT.md`, `B2_NO_CALL_REHEARSAL.json`. Cap: 240 Gemma calls / 70.4 account-wide CU draw / 100-CU reserve. The isolated Colab runtime upload-stop-recreate-restore check passed for source `34d663e`; measured no-call draw was 0.16 CU, leaving 208.49 CU on 2026-11-20. Remaining gates: freeze checker/holdout and protocol hashes; systemd detached-laptop test and service install; pre-run balance check. This is estimation only, not confirmatory. |
+| B2: future confirmatory V1/V2 comparison | Design memo only; **not run and not ready to launch** | See `B2_DESIGN.md`. The separate six-pair estimation cohort does not answer the confirmatory question. Still required: a sealed holdout inaccessible during search, defensible power assumptions and feasible budget, plus a fresh no-call rehearsal. Keep confirmatory status separate from the completed estimation cohort. |
+| B2 estimation/feasibility cohort | **Complete** | All 6 pairs / 12 arms / 240 calls completed. All selected hashes reconciled; pinned independent re-check and descriptive summary completed. V1-matched: 6/6 valid; V2: 5/6 valid; one V2 selection failed 140 fresh distance checks. No p-value or efficacy/equivalence/generalization claim. See `B2_ESTIMATION_DRAFT.md`, `B2_SELECTED_RECHECK_2026-11-21.json`, and `B2_ESTIMATION_SUMMARY_2026-11-21.json`. The e2 service and B2 Colab assignment are inactive; the final pooled account balance was 171.37 CU, with no active assignments at the final snapshot. |
 | C: VoiceID external validation | Not started; no runnable clustering implementation located | Read-only audit of `/home/cyberdid/Projects/VoiceID` found no `.py` runtime. Its VoxCeleb notebook defines `WaveFakeModelEval`, `WaveFakeModelAudit`, and `UltimateWaveFakeModel` for spoof detection, not speaker clustering or cluster merge. Do not treat it as the planned external task; first locate a runnable cluster/merge entrypoint, approved labeled data/embeddings, and a speaker-disjoint holdout. No VoiceID code or private data was changed or executed. |
 
 ## Frozen B1 feasibility pilot
@@ -52,7 +53,16 @@ The preregistration is `PREREGISTRATION.md`; any deviations must be appended to 
 
 ## B2 budget and durability checkpoint — 2026-11-20
 
+The live snapshot below is historical. The cohort later completed; see the final status row above and the 2026-11-21 closeout below.
+
 - GitHub `main` contains the separate runner/watchdog and no-call rehearsal implementation. The remaining untracked benchmark, Agensi, and skill directories are pre-existing and untouched.
 - e2-micro `paper2-colab-watchdog` is running; its B1 and B-12 systemd services currently report inactive. Colab still reports one pre-existing active L4 assignment. The B2 session is absent/stopped after rehearsal.
 - A fresh `paper2-b2-estimation` runtime uploaded a sentinel to `gs://oe-colab-scale-0903767759/paper2-v2/b2-estimation-2026-11-20/no-call-rehearsal/rehearsal-1795163650/`, was stopped, and a newly allocated runtime restored the sentinel and passed a synthetic terminal-state roundtrip. No model calls were made. The balance changed from 208.65 to 208.49 CU.
 - This verifies GCS persistence across Colab runtime recreation. It does not yet verify the detached systemd service survives laptop shutdown; that service has not been installed or started. The B2 protocol remains draft and live calls remain gated off.
+
+## B2 estimation cohort closeout — 2026-11-21
+
+- The frozen six-pair cohort completed 12/12 arms and 240/240 logged calls; 207 calls were `ok` and 33 reached the 2,048-token completion cap.
+- Reconciliation confirmed all 12 manifests and exact 20-call ledgers. The pinned independent checker verified all selected artifact hashes; 11/12 selected programs passed the correctness check.
+- The paired descriptive table has five pairs where both arms passed, one where only V1-matched passed, and none where only V2 passed or both failed. This is estimation evidence, not a confirmatory treatment-effect result.
+- Final artifacts are in `B2_SELECTED_RECHECK_2026-11-21.json`, `B2_ESTIMATION_SUMMARY_2026-11-21.json`, and `B2_LIVE_STATUS_2026-11-20.json`. The active Colab assignment and e2 watchdog service are stopped; no new model calls are queued.
