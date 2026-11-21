@@ -1,8 +1,16 @@
 # Revision notes: *When Fitness Scores Mislead*
 
-**Revision:** 3.1, 21 November 2026
+**Revision:** 3.2, 21 November 2026
 
 **Scope:** bilingual manuscript update with the completed B2 estimation cohort and synchronized publication metadata. The B2 cohort was already complete before revision 3; no new LLM campaign or benchmark run was performed while preparing revisions 3 or 3.1. The English and Ukrainian PDFs are rebuilt from the same evidence. Revision 2's prior editorial and reproducibility work is retained below as historical revision history.
+
+## Revision 3.2 changes — figure production and preprint status
+
+- Reworked all four figures in both languages with consistent colors, print-size typography, and cleaner axes and legends. Reduced oversized source canvases so labels remain legible at manuscript width.
+- Resolved the Figure 4 legend and annotation collisions; separated coincident kNN baseline markers horizontally without changing score values.
+- Updated the manuscript status line to identify the work as a preprint without claiming it has not been deposited.
+- Added Zenodo preprint-record metadata for the bilingual article deposit.
+- Rebuilt the English and Ukrainian PDFs and refreshed the SHA-256 manifest.
 
 ## Revision 3.1 changes — reviewer-driven clarity
 

@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "title": "When Fitness Scores Mislead: An Empirical Study of LLM-Guided Program Evolution",
+    "upload_type": "publication",
+    "publication_type": "preprint",
+    "publication_date": "2026-11-21",
+    "creators": [
+      {
+        "name": "Pylypenko, Oleksandr",
+        "orcid": "0009-0004-9610-9242",
+        "affiliation": "State University of Trade and Economics, Kyiv, Ukraine; in cooperation with the Department of Software Engineering and Cybersecurity"
+      }
+    ],
+    "description": "<p>This preprint reports a bounded empirical audit of evaluator reliability in LLM-guided program evolution with OpenEvolve 0.4.0. It examines circle packing and approximate nearest-neighbour search through a Colab L4 scale study, a Gemma 4 12B laptop pilot, and a separately frozen six-pair evaluator-estimation cohort.</p><p>The study compares working-evaluator selection with independent verification. In three 1,000-call circle-packing runs, the search found valid improvements that selection failed to retain in two runs. In nine matched kNN runs, cloud-assisted outcomes scored higher in eight pairs after serial re-timing; this comparison is exploratory. A later six-pair cohort selected independently valid programs in 6/6 timing-matched control runs and 5/6 distance-gated runs. The small cohort does not establish an evaluator effect.</p><p>The results are descriptive and bounded to the tasks, model configurations, and execution conditions studied. They do not establish general scaling laws, a causal benefit of cloud assistance, or general superiority of an evolutionary method. The record contains the English and Ukrainian article PDFs. Reproducibility materials and source files are linked from the repository version recorded with this deposit.</p>",
+    "access_right": "open",
+    "license": "cc-by-4.0",
+    "language": "eng",
+    "keywords": [
+      "LLM-guided program evolution",
+      "OpenEvolve",
+      "evaluator validity",
+      "independent verification",
+      "program synthesis",
+      "benchmark reliability"
+    ],
+    "related_identifiers": [
+      {
+        "identifier": "https://github.com/cyberdid/cloud-edge-ai-orchestrator/tree/paper-ii-preprint-2026-11-21-rev3.2",
+        "relation": "isSupplementedBy",
+        "resource_type": "software"
+      }
+    ],
+    "prereserve_doi": true,
+    "version": "3.2"
+  }
+}
