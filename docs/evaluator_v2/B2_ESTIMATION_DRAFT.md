@@ -1,6 +1,6 @@
 # B2 estimation study — frozen registration and launch gates
 
-**Status:** frozen estimation cohort is running independently on the e2-micro VM. The B2 systemd service is enabled; systemd currently reports `activating` while its supervisor is running, and the dedicated Colab session is busy. The current run state is recorded in `B2_LIVE_STATUS_2026-11-20.json`. This defines the lower-cost, estimation-only option and does not replace the confirmatory design in `B2_DESIGN.md`.
+**Status (2026-11-21):** the six-pair, 12-arm estimation cohort is complete: all 240 calls were recorded, all 12 selected artifacts passed manifest and hash reconciliation, and the pinned independent re-check and descriptive analysis have finished. The final state and analysis artifacts are linked below. This estimation study does not replace the confirmatory design in `B2_DESIGN.md`.
 
 - Frozen protocol SHA-256: `8f990fd64458c8060c79d71655a9712eb9f9f5963a653482e96452ff1c762719`
 - Checker fingerprint SHA-256: `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`
@@ -39,7 +39,7 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 3. Implement a B2-specific runner and watchdog with a separate Colab session name, GCS prefix, state file, and budget counter. Do not reuse B1's hard-coded `paper2-v2/b1` prefix or the active B-12 session.
 4. **Passed for exact frozen hashes:** the detached systemd no-call rehearsal recreated the Colab runtime, restored the GCS sentinel, and round-tripped terminal state; the B2 session was stopped afterward. Evidence is in `B2_FROZEN_NO_CALL_REHEARSAL.json`.
 5. **Passed at launch:** balance was 206.93 CU with one other assignment; the watchdog enforces the 70.4-CU aggregate draw cap and 100-CU floor.
-6. **Started:** the persistent systemd unit was enabled and launched the six-pair cohort. It runs independently of the laptop and resumes from its dedicated GCS checkpoints. Do not stop the service or B2 session while it is running; inspect the GCS state and systemd unit for progress.
+6. **Completed:** the persistent systemd unit ran the six-pair cohort independently of the laptop and resumed from dedicated GCS checkpoints. All 12 arms and 240 call-ledger entries are complete. Final reconciliation confirmed all manifests and exact call ledgers; no Colab assignment remains active.
 
 ## Implementation checkpoint — 2026-11-20
 
@@ -53,6 +53,34 @@ At B1's observed rough rate, `240 calls × 0.293 CU/call = 70.32 CU` (rounded pl
 - Live snapshot update — 2026-11-20 13:03 UTC: six of twelve arms are complete (120 of 240 calls), including both P3 arms. P3 V1-matched has 18 `ok` and two token-limit-truncated calls, 12 candidate records with no boolean validity field, and an official selection from iteration 13. Its selected artifact SHA-256, `887fcfa25eab9067ee0b9f0525bad1937926d7c1b460b18d529c680ec05e974d`, matches the GCS object bytes; its selected working metrics were combined score 0.2537, recall 1.0, and speed ratio 0.9927. These are working-evaluator results, not the independent holdout outcome. P3 V1-matched took 2,396.6 seconds (~40 minutes), with a 2.00-minute mean interval between its 20 model requests. Its selected hash differs from P3 V2's selected hash. The next scheduled arm is P4 V1-matched; it had no manifest at this snapshot. GCS state listed six completed runs but retained the just-completed P3 V1-matched in `current_run`; this field is stale, not evidence that the arm is still active. The supervisor remains active without restart and Colab is `BUSY`. Balance is 192.23 CU; pooled draw since launch is 14.70 CU, leaving 55.70 CU to the 70.4-CU draw cap and 92.23 CU above the 100-CU floor. Usage remains pooled with one other assignment. Six arms remain; based on observed mean call intervals from 1.23 to 2.74 minutes, plan roughly 4–6 hours for execution and handoffs, then allow additional time for the independent re-check and descriptive analysis. No re-check or inferential analysis has run; the frozen protocol remains unchanged.
 - Live snapshot update — 2026-11-20 13:52 UTC: seven of twelve arms are complete (140 of 240 calls). P4 V1-matched completed with 19 `ok` and one truncated call, 17 candidate records with no boolean validity field, and its official selection recorded as the seed program (iteration 0). The selected SHA-256 is `40133bf46bf9146fbe14c962ff6983ffd6f40faf7b2c0e5f9ab2183ffd6c9619`; the GCS object bytes match the manifest. Its working score was 0.2511, recall 1.0, and speed ratio 0.9979; this is not the independent holdout outcome. The arm took 2,814.4 seconds (~47 minutes), with a 2.31-minute mean interval between model requests. Its selected hash matches the P1/P2 seed selections. P4 V2 was scheduled next and had no manifest at the snapshot. The GCS top-level state listed seven completed arms but retained completed P4 V1-matched in `current_run`; that field is stale. The supervisor remains active without restart and Colab is `BUSY`. Balance is 189.00 CU; pooled draw since launch is 17.93 CU, leaving 52.47 CU to the 70.4-CU draw cap and 89.00 CU above the 100-CU floor. Usage remains pooled with one other assignment. Five arms remain; plan roughly 4–6 hours for execution and handoffs, plus final independent re-check and descriptive analysis. No re-check or inferential analysis has run; the frozen protocol remains unchanged.
 - The current main branch also contains a systemd unit fix placing the restart limiter in the correct section; it was reloaded without interrupting the active run. The execution source remains pinned to `3e603e426930215838ce9a2aa475959bb241ff87`.
+
+## Final estimation cohort results — 2026-11-21
+
+### Execution and artifact integrity
+
+- All **6 preregistered pairs**, **12 arms**, and **240 model-call ledger entries** completed. The ledgers contain 207 `ok` calls and 33 `truncated` calls; all 33 truncations reached the configured 2,048-token completion limit and remained within the fixed 20-call budget for each arm.
+- The terminal GCS state is `complete`. Reconciliation verified all 12 manifests, frozen protocol/source/model fields, contiguous 20-call ledgers, and recorded official selections. All 12 selected-program file hashes independently matched their manifests.
+- The independent re-check ran from the frozen source commit `3e603e426930215838ce9a2aa475959bb241ff87`, matched checker fingerprint `6eeeda09a311cfdfde83f2aac519037e606382db6580430193376b6831e53e08`, and used Docker image `antigravity-orion:local` with digest `sha256:aae973535ab734c026d878c0ef1d7ec1164b83538bdcd63c192476672cb27ae2`.
+- Full per-run evidence is in [`B2_SELECTED_RECHECK_2026-11-21.json`](B2_SELECTED_RECHECK_2026-11-21.json); the machine-readable summary is in [`B2_ESTIMATION_SUMMARY_2026-11-21.json`](B2_ESTIMATION_SUMMARY_2026-11-21.json). Current infrastructure and budget state is in [`B2_LIVE_STATUS_2026-11-20.json`](B2_LIVE_STATUS_2026-11-20.json).
+
+### Selected-program validity
+
+| Pair | V1-matched: holdout result (score) | V2: holdout result (score) |
+|---|---:|---:|
+| P1 | Pass (0.2107) | Pass (0.2491) |
+| P2 | Pass (0.2471) | Pass (0.2141) |
+| P3 | Pass (0.2310) | Pass (1.0000) |
+| P4 | Pass (0.2043) | Pass (0.2588) |
+| P5 | Pass (0.2241) | **Fail (0.0000)** |
+| P6 | Pass (0.2346) | Pass (0.2542) |
+
+V1-matched had **6/6 valid selections (100%)**; V2 had **5/6 (83.3%)**. The paired table is five pairs with both selections valid and one pair where V1-matched passed while V2 failed; there were no pairs where only V2 passed or where both failed. The descriptive difference in invalid-selection rates (V2 minus V1-matched) is **+16.7 percentage points**. Mean selected holdout score, counting invalid selections as zero per the registered analysis script, was 0.2253 for V1-matched and 0.3294 for V2.
+
+The single invalid selection was **P5 V2**. Its working evaluator selected a program it marked valid with combined score 0.4199 and recall 0.9999. The independent checker reproduced holdout recall 1.0, but rejected the program on 140 fresh checks because reported distances were not derived from the input vectors. The selected artifact therefore received validity `false` and score 0 under the registered re-check procedure. This illustrates a correctness gap for this selected artifact; with six pairs, the cohort remains descriptive and cannot establish a general treatment effect.
+
+### Interpretation
+
+The registered six-pair cohort supports an operational and descriptive result only. It does **not** establish V2 efficacy, equivalence, or generalization beyond this task and configuration. No confirmatory p-value was computed. The three holdout sets are source-visible, so the check is independently implemented and reproducible, but not a secret or sealed holdout.
 
 ## Interpretation boundary
 

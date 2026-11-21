@@ -1,0 +1,28 @@
+{
+  "analysis_type": "descriptive_estimation_only",
+  "assigned_pairs": 6,
+  "complete_pairs": 6,
+  "confirmatory": false,
+  "interpretation": "descriptive only; no efficacy, equivalence, or generalization claim",
+  "paired_table": {
+    "both_invalid": 0,
+    "both_valid": 5,
+    "v1_invalid_v2_valid": 0,
+    "v1_valid_v2_invalid": 1
+  },
+  "risk_difference_invalid_rate_v2_minus_v1": 0.16666666666666666,
+  "v1_matched": {
+    "assigned": 6,
+    "invalid_or_missing": 0,
+    "mean_selected_score_including_failures_as_zero": 0.22530144099932037,
+    "valid": 6,
+    "valid_rate": 1.0
+  },
+  "v2": {
+    "assigned": 6,
+    "invalid_or_missing": 1,
+    "mean_selected_score_including_failures_as_zero": 0.3293793392143581,
+    "valid": 5,
+    "valid_rate": 0.8333333333333334
+  }
+}
