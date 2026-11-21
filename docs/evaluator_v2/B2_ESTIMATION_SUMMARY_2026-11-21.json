@@ -4,6 +4,50 @@
   "complete_pairs": 6,
   "confirmatory": false,
   "interpretation": "descriptive only; no efficacy, equivalence, or generalization claim",
+  "paired_score_differences": {
+    "by_pair": [
+      {
+        "pair_id": "P1",
+        "v1_matched_score": 0.2106659310519906,
+        "v2_minus_v1_matched": 0.03848352828564949,
+        "v2_score": 0.2491494593376401
+      },
+      {
+        "pair_id": "P2",
+        "v1_matched_score": 0.24710040903145122,
+        "v2_minus_v1_matched": -0.03297153361331412,
+        "v2_score": 0.2141288754181371
+      },
+      {
+        "pair_id": "P3",
+        "v1_matched_score": 0.23096082623964498,
+        "v2_minus_v1_matched": 0.769039173760355,
+        "v2_score": 1.0
+      },
+      {
+        "pair_id": "P4",
+        "v1_matched_score": 0.20434121181500134,
+        "v2_minus_v1_matched": 0.05447995930232061,
+        "v2_score": 0.25882117111732195
+      },
+      {
+        "pair_id": "P5",
+        "v1_matched_score": 0.22409197064953423,
+        "v2_minus_v1_matched": -0.22409197064953423,
+        "v2_score": 0.0
+      },
+      {
+        "pair_id": "P6",
+        "v1_matched_score": 0.23464829720829977,
+        "v2_minus_v1_matched": 0.01952823220474942,
+        "v2_score": 0.2541765294130492
+      }
+    ],
+    "definition": "V2 minus V1-matched independent selected-program holdout score; invalid selections are assigned zero",
+    "maximum": 0.769039173760355,
+    "median": 0.029005880245199456,
+    "minimum": -0.22409197064953423
+  },
   "paired_table": {
     "both_invalid": 0,
     "both_valid": 5,

@@ -310,7 +310,7 @@ def make_figure(data: dict, language: str) -> Path:
         ax.plot(x, chosen, marker="x", linestyle="--", color=c, alpha=0.8,
                 label=("L: обраний endpoint" if is_uk else "L: selected endpoint") if arm == "L-long" else ("B: обраний endpoint" if is_uk else "B: selected endpoint"))
     ax.set_xlabel("Seed")
-    ax.set_ylabel("Сума радіусів / radius sum")
+    ax.set_ylabel("Сума радіусів" if is_uk else "Sum of radii")
     ax.set_xticks([101, 202, 303], ["101", "202", "303"])
     ax.grid(axis="y", alpha=0.25)
     ax.legend(fontsize=7.6, loc="lower left", frameon=False)
@@ -320,7 +320,7 @@ def make_figure(data: dict, language: str) -> Path:
 
     # Right: paired kNN selected endpoint, reconstructed from serial re-checks.
     ax = axes[1]
-    ax.set_title("kNN: L та LC, 9 matched pairs" if not is_uk else "kNN: L та LC, 9 пар",
+    ax.set_title("kNN: L vs LC, 9 matched pairs" if not is_uk else "kNN: L та LC, 9 пар",
                  fontsize=11, weight="bold")
     for row in data["knn"]["lc_l_pairs"]:
         x = row["seed"]
@@ -333,12 +333,12 @@ def make_figure(data: dict, language: str) -> Path:
     ax.set_xticks([0, 1], ["L", "LC"])
     ax.set_xlim(-0.25, 1.22)
     ax.set_ylim(-0.04, 1.08)
-    ax.set_ylabel("Перевірений бал / verified score")
+    ax.set_ylabel("Перевірений бал" if is_uk else "Verified score")
     ax.grid(axis="y", alpha=0.25)
     summary = "Медіана Δ=0.776; 8/9 вище" if is_uk else "Median Δ=0.776; 8/9 higher"
     ax.text(0.98, 0.96, summary, transform=ax.transAxes, ha="right", va="top", fontsize=8,
             bbox={"boxstyle": "round,pad=.35", "fc": "white", "ec": "#bbbbbb", "alpha": .9})
-    fig.suptitle("Аудит selection / Selection audit", fontsize=13, weight="bold")
+    fig.suptitle("Аудит відбору" if is_uk else "Selection audit", fontsize=13, weight="bold")
     path = FIGURES / f"fig4_selection_audit_{language}.pdf"
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)

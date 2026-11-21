@@ -84,6 +84,8 @@ The timestamped records below are retained as execution history. The final resul
 
 V1-matched had **6/6 valid selections (100%)**; V2 had **5/6 (83.3%)**. The paired table is five pairs with both selections valid and one pair where V1-matched passed while V2 failed; there were no pairs where only V2 passed or where both failed. The descriptive difference in invalid-selection rates (V2 minus V1-matched) is **+16.7 percentage points**. Mean selected holdout score, counting invalid selections as zero under the frozen analysis rule, was 0.2253 for V1-matched and 0.3294 for V2.
 
+Using that same rule, the six paired score differences (V2 minus V1-matched, P1–P6) were +0.0385, −0.0330, +0.7690, +0.0545, −0.2241, and +0.0195. The median difference was +0.0290, with a range from −0.2241 to +0.7690. This descriptive score distribution is sensitive to P3's +0.7690 difference; no inferential test was computed.
+
 The single invalid selection was **P5 V2**. Its working evaluator selected a program it marked valid with combined score 0.4199 and recall 0.9999. The independent checker reproduced holdout recall 1.0, but rejected the program on 140 fresh checks because reported distances were not derived from the input vectors. The selected artifact therefore received validity `false` and score 0 under the frozen re-check procedure. This illustrates a correctness gap for this selected artifact; with six pairs, the cohort remains descriptive and cannot establish a general treatment effect.
 
 ### Interpretation

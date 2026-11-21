@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import statistics
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,20 @@ def summarize(report: dict[str, Any], *, expected_pairs: int = 6) -> dict[str, A
         else:
             table["both_invalid"] += 1
 
+    paired_score_differences = []
+    for pair_id in sorted(per_pair, key=lambda value: int(value[1:])):
+        v1 = per_pair[pair_id]["v1_matched"]
+        v2 = per_pair[pair_id]["v2"]
+        v1_score = float(v1.get("score", 0.0)) if v1["valid"] else 0.0
+        v2_score = float(v2.get("score", 0.0)) if v2["valid"] else 0.0
+        paired_score_differences.append({
+            "pair_id": pair_id,
+            "v1_matched_score": v1_score,
+            "v2_score": v2_score,
+            "v2_minus_v1_matched": v2_score - v1_score,
+        })
+    differences = [row["v2_minus_v1_matched"] for row in paired_score_differences]
+
     arm_summaries = {}
     for arm in ARMS:
         values = [pair[arm] for pair in per_pair.values()]
@@ -77,6 +92,13 @@ def summarize(report: dict[str, Any], *, expected_pairs: int = 6) -> dict[str, A
                 for arm in ARMS) for arms in per_pair.values()),
         "v1_matched": arm_summaries["v1_matched"], "v2": arm_summaries["v2"],
         "paired_table": table,
+        "paired_score_differences": {
+            "definition": "V2 minus V1-matched independent selected-program holdout score; invalid selections are assigned zero",
+            "by_pair": paired_score_differences,
+            "median": statistics.median(differences),
+            "minimum": min(differences),
+            "maximum": max(differences),
+        },
         "risk_difference_invalid_rate_v2_minus_v1": risk_difference,
         "confirmatory": False,
         "interpretation": "descriptive only; no efficacy, equivalence, or generalization claim",

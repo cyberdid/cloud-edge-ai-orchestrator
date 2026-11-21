@@ -7,7 +7,7 @@ authors:
     given-names: Oleksandr
     orcid: "https://orcid.org/0009-0004-9610-9242"
     affiliation: "State University of Trade and Economics, Kyiv, Ukraine"
-version: "draft-2026-11-21-rev3"
+version: "draft-2026-11-21-rev3.1"
 date-released: 2026-11-21
 url: "https://github.com/cyberdid/cloud-edge-ai-orchestrator/tree/main/docs/paper_ii"
 repository-code: "https://github.com/cyberdid/cloud-edge-ai-orchestrator"

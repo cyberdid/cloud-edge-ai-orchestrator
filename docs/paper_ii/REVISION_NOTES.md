@@ -1,8 +1,16 @@
 # Revision notes: *When Fitness Scores Mislead*
 
-**Revision:** 3, 21 November 2026
+**Revision:** 3.1, 21 November 2026
 
-**Scope:** bilingual manuscript update with the completed B2 estimation cohort and synchronized publication metadata. The B2 cohort was already complete before this revision; no new LLM campaign or benchmark run was performed while preparing revision 3. The English and Ukrainian PDFs are rebuilt from the same evidence. Revision 2's prior editorial and reproducibility work is retained below as historical revision history.
+**Scope:** bilingual manuscript update with the completed B2 estimation cohort and synchronized publication metadata. The B2 cohort was already complete before revision 3; no new LLM campaign or benchmark run was performed while preparing revisions 3 or 3.1. The English and Ukrainian PDFs are rebuilt from the same evidence. Revision 2's prior editorial and reproducibility work is retained below as historical revision history.
+
+## Revision 3.1 changes — reviewer-driven clarity
+
+- Translated all Figure 4 labels in the English graphic into English; the Ukrainian graphic retains Ukrainian labels.
+- Added the six pairwise B2 score differences (V2 minus V1-matched), their median (+0.0290), and range (−0.2241 to +0.7690) to both manuscripts. The text notes that the median is sensitive to P3's +0.7690 difference and makes no evaluator-effect claim.
+- Extended the descriptive B2 summary generator and JSON artifact with pairwise scores and score differences, using the frozen rule that invalid selections receive zero.
+- Updated package and citation metadata to revision 3.1, regenerated both PDFs and Figure 4, and refreshed the evidence checksum manifest.
+- Verified the displayed differences against the 12 rows in `B2_SELECTED_RECHECK_2026-11-21.json`; no model calls or benchmark runs were performed.
 
 ## Revision 3 changes — B2 estimation cohort
 
