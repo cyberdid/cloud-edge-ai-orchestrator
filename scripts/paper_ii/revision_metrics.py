@@ -289,56 +289,64 @@ def build_metrics() -> dict:
 
 def make_figure(data: dict, language: str) -> Path:
     import matplotlib.pyplot as plt
+    from plot_style import COLORS, apply_style, polish_axis
 
+    apply_style()
     FIGURES.mkdir(parents=True, exist_ok=True)
     is_uk = language == "uk"
-    colors = {"L-long": "#0072B2", "B-long": "#D55E00", "L": "#0072B2", "LC": "#CC79A7"}
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6), constrained_layout=True)
+    colors = {"L-long": COLORS["L"], "B-long": COLORS["B"], "L": COLORS["L"], "LC": COLORS["LC"]}
+    fig, axes = plt.subplots(1, 2, figsize=(6.25, 3.55))
 
     # Left: long-run best-valid versus the endpoint actually selected.
     ax = axes[0]
     title = "Довгий пошук кіл: знайдено та обрано" if is_uk else "Long circle search: found vs selected"
-    ax.set_title(title, fontsize=11, weight="bold")
+    ax.set_title(title, loc="left", pad=7)
     for arm in ("L-long", "B-long"):
         rows = [r for r in data["selection_regret"]["runs"] if r["arm"] == arm]
         x = [r["seed"] for r in rows]
         best = [r["best_valid_reported"] for r in rows]
         chosen = [r["selected_verified"] for r in rows]
         c = colors[arm]
-        ax.plot(x, best, marker="o", linestyle="-", color=c,
+        ax.plot(x, best, marker="o", markersize=4.2, linewidth=1.45, linestyle="-", color=c,
                 label=("L: найкращий валідний" if is_uk else "L: best valid") if arm == "L-long" else ("B: найкращий валідний" if is_uk else "B: best valid"))
-        ax.plot(x, chosen, marker="x", linestyle="--", color=c, alpha=0.8,
+        ax.plot(x, chosen, marker="x", markersize=4.6, markeredgewidth=1.2, linewidth=1.15, linestyle="--", color=c, alpha=0.92,
                 label=("L: обраний endpoint" if is_uk else "L: selected endpoint") if arm == "L-long" else ("B: обраний endpoint" if is_uk else "B: selected endpoint"))
     ax.set_xlabel("Seed")
     ax.set_ylabel("Сума радіусів" if is_uk else "Sum of radii")
     ax.set_xticks([101, 202, 303], ["101", "202", "303"])
-    ax.grid(axis="y", alpha=0.25)
-    ax.legend(fontsize=7.6, loc="lower left", frameon=False)
+    polish_axis(ax)
     ax.text(0.98, 0.96, "L: 2/3 invalid\nB: 0/3 invalid" if not is_uk else "L: 2/3 невалідні\nB: 0/3 невалідні",
-            transform=ax.transAxes, ha="right", va="top", fontsize=8,
-            bbox={"boxstyle": "round,pad=.35", "fc": "white", "ec": "#bbbbbb", "alpha": .9})
+            transform=ax.transAxes, ha="right", va="top", fontsize=7.1, color=COLORS["muted"],
+            bbox={"boxstyle": "round,pad=.3", "fc": "white", "ec": "#D9E0E4", "lw": 0.55, "alpha": .96})
 
     # Right: paired kNN selected endpoint, reconstructed from serial re-checks.
     ax = axes[1]
-    ax.set_title("kNN: L vs LC, 9 matched pairs" if not is_uk else "kNN: L та LC, 9 пар",
-                 fontsize=11, weight="bold")
-    for row in data["knn"]["lc_l_pairs"]:
-        x = row["seed"]
+    ax.set_title("kNN: matched endpoints" if not is_uk else "kNN: парні результати",
+                 loc="left", pad=7)
+    pairs = data["knn"]["lc_l_pairs"]
+    # Slight horizontal separation makes the nine identical L values visible;
+    # y coordinates and verified scores remain unchanged.
+    jitter = [((i) - (len(pairs) - 1) / 2) * 0.018 for i in range(len(pairs))]
+    for i, row in enumerate(pairs):
         y_l = row["L"]["verified_score_median"]
         y_lc = row["LC"]["verified_score_median"]
-        ax.plot([0, 1], [y_l, y_lc], color="#999999", linewidth=0.9, alpha=0.7, zorder=1)
-        ax.scatter(0, y_l, color=colors["L"], s=22, zorder=2)
-        ax.scatter(1, y_lc, color=colors["LC"], s=22, zorder=2)
-        ax.text(1.04, y_lc, str(x), fontsize=6.5, va="center", color="#555555", clip_on=False)
+        ax.plot([jitter[i], 1 + jitter[i]], [y_l, y_lc], color=COLORS["pair"], linewidth=0.8, alpha=0.8, zorder=1)
+        ax.scatter(jitter[i], y_l, color=colors["L"], marker="o", edgecolor="white", linewidth=0.45, s=24, zorder=2)
+        ax.scatter(1 + jitter[i], y_lc, color=colors["LC"], marker="D", edgecolor="white", linewidth=0.45, s=25, zorder=2)
     ax.set_xticks([0, 1], ["L", "LC"])
-    ax.set_xlim(-0.25, 1.22)
+    ax.set_xlim(-0.20, 1.20)
     ax.set_ylim(-0.04, 1.08)
     ax.set_ylabel("Перевірений бал" if is_uk else "Verified score")
-    ax.grid(axis="y", alpha=0.25)
+    polish_axis(ax)
     summary = "Медіана Δ=0.776; 8/9 вище" if is_uk else "Median Δ=0.776; 8/9 higher"
-    ax.text(0.98, 0.96, summary, transform=ax.transAxes, ha="right", va="top", fontsize=8,
-            bbox={"boxstyle": "round,pad=.35", "fc": "white", "ec": "#bbbbbb", "alpha": .9})
-    fig.suptitle("Аудит відбору" if is_uk else "Selection audit", fontsize=13, weight="bold")
+    ax.text(0.50, -0.24, summary, transform=ax.transAxes, ha="center", va="top", fontsize=6.9,
+            color=COLORS["muted"], clip_on=False)
+    fig.suptitle("Аудит відбору" if is_uk else "Selection audit", fontsize=10.5, weight="bold", y=0.99)
+    left_handles, left_labels = axes[0].get_legend_handles_labels()
+    fig.legend(left_handles, left_labels, loc="lower center", bbox_to_anchor=(0.5, 0.025),
+               frameon=False, ncol=2, fontsize=6.8, columnspacing=1.1,
+               handlelength=1.7, handletextpad=0.4, labelspacing=0.35)
+    fig.subplots_adjust(left=0.10, right=0.99, top=0.83, bottom=0.29, wspace=0.30)
     path = FIGURES / f"fig4_selection_audit_{language}.pdf"
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
