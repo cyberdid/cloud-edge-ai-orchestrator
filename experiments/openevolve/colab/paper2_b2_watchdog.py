@@ -80,7 +80,7 @@ def reconcile_state(state: dict[str, Any], evidence: dict[str, dict[str, Any]],
         manifest, rows = record.get("manifest", {}), record.get("calls", [])
         expected = {
             "status": "complete", "protocol_id": protocol["protocol_id"],
-            "protocol_sha256": state["protocol_sha256"], "source_commit": state["source_commit"],
+            "protocol_sha256": state["protocol_sha256"], "git_sha": state["source_commit"],
             "model_digest": protocol["model_digest"], "task": "knn", "arm": "L",
             "seed": pair["seed"], "evaluator_version": version,
         }
